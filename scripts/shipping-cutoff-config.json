@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "cutoffHour": 14,
+  "cutoffMinute": 0,
+  "shipDays": [1, 2, 3, 4, 5],
+  "holidays": ["2026-11-26", "2026-12-25", "2027-01-01"],
+  "deadline": {"label": "Christmas", "lastOrderDate": "2026-12-18"}
+}

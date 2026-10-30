@@ -1,0 +1,7 @@
+# Writes the same-day shipping cut-off config read by the trust-and-shipping extension.
+mutation SetShippingCutoffConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "shipping_cutoff_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}

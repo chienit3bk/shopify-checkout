@@ -1,0 +1,5 @@
+{
+  "shipsToday": "Order within {{time}} — ships today",
+  "shipsOn": "Order now — ships {{day}}",
+  "deadline": "Order by {{date}} for {{label}} delivery"
+}

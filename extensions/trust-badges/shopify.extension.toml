@@ -1,0 +1,34 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "trust-badges"
+handle = "trust-badges"
+type = "ui_extension"
+uid = "a0d578a7-bb59-dbca-fa12-1d5486c72d3379072676"
+
+# Trust badges under the payment methods.
+[[extensions.targeting]]
+module = "./src/Trust.tsx"
+target = "purchase.checkout.payment-method-list.render-after"
+
+# Badge wording, editable by the merchant in the checkout editor (empty = default text).
+[extensions.settings]
+[[extensions.settings.fields]]
+key = "secure_text"
+type = "single_line_text_field"
+name = "Secure checkout text"
+
+[[extensions.settings.fields]]
+key = "returns_text"
+type = "single_line_text_field"
+name = "Returns text"
+
+[[extensions.settings.fields]]
+key = "shipping_text"
+type = "single_line_text_field"
+name = "Shipping text"
+
+[[extensions.settings.fields]]
+key = "guarantee_text"
+type = "single_line_text_field"
+name = "Guarantee text"
