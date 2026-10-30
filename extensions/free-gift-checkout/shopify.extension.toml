@@ -1,0 +1,21 @@
+# Learn more about configuring your checkout UI extension:
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration
+
+api_version = "2026-10"
+
+[[extensions]]
+name = "free-gift-checkout"
+handle = "free-gift-checkout"
+type = "ui_extension"
+uid = "33b50f2c-1f71-c832-e6a9-0afd922e1e80f62109f2"
+
+# Rules JSON, written by the app (see scripts/set-config.graphql). Same metafield the discount Function reads.
+[[extensions.metafields]]
+namespace = "$app"
+key = "free_gift_config"
+owner_type = "SHOP"
+
+# Right under the line items, so the gift and the "spend $X more" bar sit next to the cart.
+[[extensions.targeting]]
+module = "./src/Checkout.tsx"
+target = "purchase.checkout.cart-line-list.render-after"

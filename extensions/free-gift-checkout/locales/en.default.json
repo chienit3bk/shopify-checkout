@@ -1,0 +1,8 @@
+{
+  "unlockedHeading": "You unlocked a free gift",
+  "spendMore": "Spend {{amount}} more to get {{gift}}",
+  "progressLabel": "Progress towards your next free gift",
+  "removedGift": "You removed {{gift}}.",
+  "addBack": "Add it back",
+  "giftsNotAvailableHere": "Free gifts can't be added with this checkout method."
+}

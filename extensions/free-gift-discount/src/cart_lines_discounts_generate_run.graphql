@@ -1,0 +1,36 @@
+query CartInput {
+  # Cart amounts are in the buyer's currency; rule amounts are in the shop's.
+  presentmentCurrencyRate
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+          }
+        }
+      }
+    }
+  }
+  shop {
+    # No namespace = the app-reserved namespace ($app), so only this app can write it.
+    config: metafield(key: "free_gift_config") {
+      jsonValue
+    }
+  }
+  discount {
+    discountClasses
+  }
+}

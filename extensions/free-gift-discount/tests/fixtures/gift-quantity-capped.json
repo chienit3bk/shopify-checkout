@@ -1,0 +1,139 @@
+{
+  "payload": {
+    "export": "cart-lines-discounts-generate-run",
+    "target": "cart.lines.discounts.generate.run",
+    "input": {
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "60.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/101",
+              "product": {
+                "id": "gid://shopify/Product/1"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/2",
+            "quantity": 3,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "36.0"
+              }
+            },
+            "giftRule": {
+              "value": "tier-50"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/901",
+              "product": {
+                "id": "gid://shopify/Product/900"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "currencyCode": "USD",
+            "rules": [
+              {
+                "id": "tier-50",
+                "title": "Free mug",
+                "giftVariantId": "gid://shopify/ProductVariant/901",
+                "group": "spend",
+                "priority": 1,
+                "condition": {
+                  "type": "subtotal_at_least",
+                  "amount": 50
+                }
+              },
+              {
+                "id": "tier-100",
+                "title": "Free tote bag",
+                "giftVariantId": "gid://shopify/ProductVariant/902",
+                "group": "spend",
+                "priority": 2,
+                "condition": {
+                  "type": "subtotal_at_least",
+                  "amount": 100
+                }
+              },
+              {
+                "id": "combo-cap",
+                "title": "Free cap",
+                "giftVariantId": "gid://shopify/ProductVariant/903",
+                "condition": {
+                  "type": "all",
+                  "conditions": [
+                    {
+                      "type": "product_in_cart",
+                      "productIds": [
+                        "gid://shopify/Product/2"
+                      ],
+                      "minQuantity": 2
+                    },
+                    {
+                      "type": "not",
+                      "condition": {
+                        "type": "product_in_cart",
+                        "productIds": [
+                          "gid://shopify/Product/3"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "discount": {
+        "discountClasses": [
+          "PRODUCT"
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "productDiscountsAdd": {
+            "candidates": [
+              {
+                "message": "Free mug",
+                "targets": [
+                  {
+                    "cartLine": {
+                      "id": "gid://shopify/CartLine/2",
+                      "quantity": 1
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": "100.0"
+                  }
+                }
+              }
+            ],
+            "selectionStrategy": "ALL"
+          }
+        }
+      ]
+    }
+  }
+}
