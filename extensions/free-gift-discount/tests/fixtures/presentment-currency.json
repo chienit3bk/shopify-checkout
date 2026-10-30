@@ -5,6 +5,11 @@
     "input": {
       "presentmentCurrencyRate": "2.0",
       "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "EUR"
+          }
+        },
         "lines": [
           {
             "id": "gid://shopify/CartLine/1",

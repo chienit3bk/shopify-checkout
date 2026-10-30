@@ -9,6 +9,7 @@ import {
   nextUnlock,
   parseConfig,
   planGiftChanges,
+  supportsCurrency,
 } from './rules';
 
 const SHIRT = 'gid://shopify/Product/1';
@@ -261,5 +262,51 @@ describe('parseConfig', () => {
       rules: [config.rules[0], {id: 'bad', title: 'x', giftVariantId: 'v', condition: {type: 'nope'}}],
     });
     expect(parsed?.rules.map((rule) => rule.id)).toEqual(['tier-50']);
+  });
+});
+
+describe('multi-currency thresholds', () => {
+  const eurConfig: GiftConfig = {
+    version: 1,
+    currencyCode: 'USD',
+    rules: [
+      {id: 'spend-75', title: 'Travel cleanser', giftVariantId: MUG_VARIANT, condition: {type: 'subtotal_at_least', amount: 75, amounts: {EUR: 70}}},
+    ],
+  };
+  const eurCart = (subtotal: number, rate?: number): CartLike => ({
+    currencyCode: 'EUR',
+    rate,
+    lines: [line(SHIRT, 1, subtotal)],
+  });
+
+  test('an explicit market amount wins over the converted one', () => {
+    // €70 override, even though 75 × 0.9 = 67.50 would also pass at €68.
+    expect(eligibleRules(eurConfig, eurCart(68, 0.9))).toEqual([]);
+    expect(ids(eligibleRules(eurConfig, eurCart(70, 0.9)))).toEqual(['spend-75']);
+  });
+
+  test('without an override, the shop amount is converted with the rate', () => {
+    const gbp: CartLike = {currencyCode: 'GBP', rate: 0.8, lines: [line(SHIRT, 1, 60)]};
+    expect(ids(eligibleRules(eurConfig, gbp))).toEqual(['spend-75']); // 75 × 0.8 = 60
+  });
+
+  test('no rate and no override → the threshold is unknown, so it is not met', () => {
+    const gbp: CartLike = {currencyCode: 'GBP', lines: [line(SHIRT, 1, 500)]};
+    expect(eligibleRules(eurConfig, gbp)).toEqual([]);
+  });
+
+  test('progress is in the cart currency', () => {
+    expect(nextUnlock(eurConfig, eurCart(50))).toMatchObject({remaining: 20});
+  });
+
+  test('supportsCurrency: config currency, covered market, uncovered market', () => {
+    expect(supportsCurrency(eurConfig, 'USD')).toBe(true);
+    expect(supportsCurrency(eurConfig, 'EUR')).toBe(true);
+    expect(supportsCurrency(eurConfig, 'GBP')).toBe(false);
+  });
+
+  test('parseConfig rejects non-numeric market amounts', () => {
+    const bad = {...eurConfig, rules: [{...eurConfig.rules[0], condition: {type: 'subtotal_at_least', amount: 75, amounts: {EUR: '70'}}}]};
+    expect(parseConfig(bad)?.rules).toHaveLength(0);
   });
 });

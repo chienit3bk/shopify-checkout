@@ -1,0 +1,28 @@
+{
+  "brand": "Solvane",
+  "imageCredit": "Photos: Shopify Burst (free for commercial use)",
+  "collections": [
+    {"key": "cleansers", "title": "Cleansers", "description": "Gentle, pH-balanced cleansers that lift impurities without stripping the skin barrier."},
+    {"key": "serums", "title": "Serums & Oils", "description": "Concentrated actives to target dullness, dehydration and uneven tone."},
+    {"key": "moisturizers", "title": "Moisturizers", "description": "Day and night hydration built around ceramides, peptides and squalane."},
+    {"key": "masks", "title": "Masks & Eye Care", "description": "Weekly treatments and eye care for a refreshed, well-rested look."},
+    {"key": "tools", "title": "Tools & Body", "description": "Facial tools and body care to complete the ritual."},
+    {"key": "gifts", "title": "Minis & Gifts", "description": "Travel sizes and gifts — unlocked free at checkout with qualifying orders."}
+  ],
+  "products": [
+    {"key": "gel-cleanser", "title": "Gentle Gel Cleanser", "collection": "cleansers", "type": "Cleanser", "size": "150 ml", "price": 24, "image": "hands-using-a-tube-of-hand-cream", "description": "A low-foam gel cleanser with glycerin and green tea that removes sunscreen and daily grime while keeping skin soft. Suitable for all skin types."},
+    {"key": "clay-mask", "title": "Purifying Clay Mask", "collection": "masks", "type": "Mask", "size": "75 ml", "price": 32, "image": "purifying-face-mask", "description": "Kaolin and bentonite clay draw out excess oil and refine the look of pores in ten minutes. Use 1–2 times a week."},
+    {"key": "charcoal-mask", "title": "Charcoal Peel-Off Mask", "collection": "masks", "type": "Mask", "size": "60 ml", "price": 28, "image": "activated-charcoal-face-mask-peel", "description": "Activated charcoal peel-off mask that lifts surface buildup for a smoother, clearer-looking complexion."},
+    {"key": "vitamin-c-serum", "title": "Vitamin C Brightening Serum", "collection": "serums", "type": "Serum", "size": "30 ml", "price": 48, "image": "hands-hold-black-dropper-bottle", "description": "15% stabilised vitamin C with ferulic acid and vitamin E to brighten and even skin tone. Apply every morning before moisturiser."},
+    {"key": "squalane-oil", "title": "Squalane Face Oil", "collection": "serums", "type": "Face oil", "size": "30 ml", "price": 42, "image": "glass-jar-of-face-oil-and-a-dropper-above-it", "description": "Plant-derived squalane that seals in moisture without clogging pores. Lightweight enough for morning and night."},
+    {"key": "ceramide-cream", "title": "Ceramide Barrier Cream", "collection": "moisturizers", "type": "Moisturizer", "size": "50 ml", "price": 38, "image": "hands-hold-a-small-cosmetics-container", "description": "Three essential ceramides and niacinamide restore the skin barrier and lock in hydration for 24 hours."},
+    {"key": "night-cream", "title": "Restorative Night Cream", "collection": "moisturizers", "type": "Moisturizer", "size": "50 ml", "price": 52, "image": "hand-and-a-glass-jar-of-hand-cream", "description": "A rich peptide night cream with shea butter that supports overnight repair. Wake up to smoother, plumper-looking skin."},
+    {"key": "eye-patches", "title": "Hydrogel Eye Patches", "collection": "masks", "type": "Eye care", "size": "30 pairs", "price": 34, "image": "container-of-green-under-eye-patches", "description": "Cooling hydrogel patches with caffeine and green tea to de-puff and brighten the under-eye area in 15 minutes."},
+    {"key": "jade-roller", "title": "Jade Facial Roller", "collection": "tools", "type": "Tool", "size": "Dual-ended", "price": 36, "image": "close-up-of-a-person-using-a-jade-roller-on-their-cheek", "description": "Natural jade roller for a cooling facial massage that helps serums absorb and reduces the look of puffiness."},
+    {"key": "konjac-exfoliator", "title": "Konjac Body Exfoliator", "collection": "tools", "type": "Body care", "size": "One size", "price": 18, "image": "hand-holds-a-skin-exfoliator-towards-the-camera", "description": "A gentle plant-based exfoliator that buffs away dry skin for a smoother body. Rinse and air-dry after each use."},
+    {"key": "lip-oil", "title": "Nourishing Lip Oil", "collection": "tools", "type": "Lip care", "size": "8 ml", "price": 19, "image": "natural-lip-gloss-being-applied", "description": "A non-sticky lip oil with jojoba and rosehip for a soft, glossy finish."},
+    {"key": "travel-cleanser", "title": "Gentle Gel Cleanser — Travel Size", "collection": "gifts", "type": "Mini", "size": "30 ml", "price": 9, "image": "hands-with-red-nails-hold-a-small-cosmetics-container", "description": "Our best-selling gel cleanser in a carry-on friendly size."},
+    {"key": "mini-eye-patches", "title": "Hydrogel Eye Patches — Trial Pack", "collection": "gifts", "type": "Mini", "size": "5 pairs", "price": 14, "image": "hair-wrapped-in-towel-and-moisterizing-face-mask", "description": "Five pairs of our cooling eye patches — try before you commit."},
+    {"key": "beauty-bag", "title": "Solvane Signature Beauty Bag", "collection": "gifts", "type": "Accessory", "size": "One size", "price": 28, "image": "flatlay-of-makeup-on-a-round-white-plate", "description": "A wipe-clean vanity bag that fits your full routine. Exclusive gift with qualifying orders."}
+  ]
+}

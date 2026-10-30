@@ -17,33 +17,38 @@ Shopify Plus development store. The first time, Shopify asks for the store passw
 **`ohsteg`** — enter it, then click the link again to land in checkout with that cart
 (test store, no real payment).
 
+The demo store sells **Solvane**, a fictional skincare brand (14 products in 6 collections,
+US + EU markets).
+
 | Try | Cart | What you should see |
 |---|---|---|
-| [Not there yet](https://clark-nguyen.myshopify.com/cart/53264714432794:1) | $600 snowboard | "Spend $100.00 more" + the gift you'll unlock |
-| [Tier 1](https://clark-nguyen.myshopify.com/cart/53264714858778:1) | $885.95 snowboard | Sample wax added for free, next tier shown |
-| [Complex rule](https://clark-nguyen.myshopify.com/cart/53264714629402:2) | 2× Complete snowboard | Bundle wax + sample wax, both free |
-| [Tier 2 + rule branch 2](https://clark-nguyen.myshopify.com/cart/53264715219226:1,53264714432794:1,53264715546906:1) | 3 snowboards, $2,374.95 | Special wax replaces sample wax; bundle wax via the "$2,000 + Hydrogen" branch |
+| [Not there yet](https://clark-nguyen.myshopify.com/cart/53265036247322:1) | Ceramide Barrier Cream ($38) | "Spend $37.00 more" + the travel-size cleanser you'll unlock |
+| [Tier 1](https://clark-nguyen.myshopify.com/cart/53265036280090:1,53265035952410:1) | Night Cream + Gel Cleanser ($76) | Travel cleanser added free; Beauty Bag shown as the next reward |
+| [Complete your routine](https://clark-nguyen.myshopify.com/cart/53265036116250:1,53265036247322:1) | Vitamin C Serum + Ceramide Cream ($86) | Serum + moisturizer → eye-patch trial pack **and** the $75 gift |
+| [Tier 2 + mask branch](https://clark-nguyen.myshopify.com/cart/53265036280090:1,53265035985178:1,53265037000986:1,53265037066522:1,53265037099290:1) | 5 items incl. a clay mask ($157) | Beauty Bag replaces the travel cleanser; routine gift via "$100+ with a mask" |
+| [Exclusion](https://clark-nguyen.myshopify.com/cart/53265036116250:1,53265036247322:1,53265036935450:1) | Serum + cream + full-size eye patches ($120) | No eye-patch trial (they're already buying the full size) — $75 gift only |
 
 | Under the threshold | Tier 1 unlocked |
 |---|---|
 | ![Progress bar](docs/screenshots/00-progress.png) | ![Tier 1](docs/screenshots/01-tier-1-unlocked.png) |
 
-| Complex rule + tier 1 | Tier 2 + complex rule ("$2,000 + Hydrogen" branch) |
+| Complete your routine + tier 1 | Tier 2 + routine via the mask branch |
 |---|---|
-| ![Complex rule](docs/screenshots/02-complex-rule-and-tier-1.png) | ![Tier 2](docs/screenshots/03-tier-2-and-rule-branch-2.png) |
+| ![Routine](docs/screenshots/02-routine-and-tier-1.png) | ![Tier 2](docs/screenshots/03-tier-2-and-mask-branch.png) |
 
 ### What it handles
 
 | Case | Example from the demo config |
 |---|---|
-| Spend threshold | $700+ → free sample ski wax |
-| Tiers (best one wins) | $1,500+ → special ski wax *instead of* the sample |
-| Nested AND / OR / NOT | (2+ Complete snowboards **and not** a Multi-managed snowboard) **or** ($2,000+ **and** a Hydrogen snowboard) → bundle wax |
-| Progress | "Spend $100.00 more to get Free sample ski wax" + progress bar |
+| Spend threshold | $75+ → Gentle Gel Cleanser travel size |
+| Tiers (best one wins) | $150+ → Signature Beauty Bag *instead of* the travel cleanser |
+| Nested AND / OR / NOT | ((a serum **and** a moisturizer) **or** ($100+ **and** a mask)) **and not** full-size eye patches → eye-patch trial pack |
+| Per-market thresholds | $75 / **€70** and $150 / **€140** — round local amounts instead of converted ones |
+| Progress | "Spend $37.00 more to unlock this free gift" + the gift's product card |
 | Cart changes | Gift removed when the cart stops qualifying; extra units trimmed; duplicate lines dropped |
 | Config changes | Gift for a deleted rule or an old variant is removed and replaced |
 | Abuse | A `_free_gift` attribute added by hand (Cart API, theme) gets **no** discount unless the cart really qualifies |
-| Multi-currency | The Function converts with `presentmentCurrencyRate`; the extension stays idle outside the config currency |
+| Multi-currency | Market overrides first; otherwise the Function converts with `presentmentCurrencyRate`. The extension only acts in currencies whose thresholds it knows |
 | Checkout limits | Respects cart instructions (`canAddCartLine` / `canRemoveCartLine`), e.g. accelerated checkouts |
 
 ### How it works
@@ -78,11 +83,11 @@ flowchart LR
   "currencyCode": "USD",
   "rules": [
     {
-      "id": "spend-700",
-      "title": "Free sample ski wax",
+      "id": "spend-75",
+      "title": "Free with orders over $75",
       "giftVariantId": "gid://shopify/ProductVariant/…",
       "group": "spend", "priority": 1,          // tiers: highest priority in a group wins
-      "condition": {"type": "subtotal_at_least", "amount": 700}
+      "condition": {"type": "subtotal_at_least", "amount": 75, "amounts": {"EUR": 70}}
     }
   ]
 }
@@ -98,10 +103,10 @@ Conditions: `subtotal_at_least`, `total_quantity_at_least`, `product_in_cart` (w
 npm test
 ```
 
-- **31 unit tests** for the rules engine — every case above, plus mutation-checked (breaking the
+- **37 unit tests** for the rules engine — every case above, plus mutation-checked (breaking the
   gift-line exclusion or the variant check makes the suite fail).
-- **7 Function tests** that build the wasm and run it against fixtures: eligible, attribute added
-  by hand, quantity capped, wrong variant, complex rule + tier, presentment currency, no config.
+- **8 Function tests** that build the wasm and run it against fixtures: eligible, attribute added
+  by hand, quantity capped, wrong variant, complex rule + tier, presentment currency, per-market override, no config.
 - Manually verified on a Shopify Plus dev store (screenshots above), including the abuse case.
 
 ### Run it
@@ -122,8 +127,10 @@ Then in the checkout editor open **Apps → free-gift-checkout → Add block** a
 
 ### Known limits
 
-- Rule amounts are in one currency; the extension only acts when the buyer pays in it
-  (the Function still prices correctly in any currency).
+- In checkout the extension has no exchange rate: it acts in the config currency and in markets
+  with explicit amounts (`amounts.EUR`). The Function prices correctly in every currency.
+- The EU market is configured but the dev store has no EU shipping zone yet, so EUR checkouts
+  aren't live; EUR behaviour is covered by unit and Function tests.
 - The extension compares line totals *after* line discounts, the Function *before* — so the
   extension is the stricter of the two and never adds a gift the Function won't make free.
 - "Buyer removed the gift" is remembered for the current checkout only.
@@ -134,3 +141,5 @@ Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibil
 [Upwork](https://www.upwork.com/freelancers/~01d98f2acd2861ac4f) ·
 [LinkedIn](https://www.linkedin.com/in/clark-nguyen-149413272/) ·
 [dev.to](https://dev.to/chienit3bk)
+
+Product photos: [Shopify Burst](https://www.shopify.com/stock-photos) (free for commercial use). Solvane is a fictional brand.

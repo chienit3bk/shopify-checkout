@@ -12,6 +12,7 @@ import {
   nextUnlock,
   parseConfig,
   planGiftChanges,
+  supportsCurrency,
 } from '../../../shared/free-gift/rules';
 
 export default async () => {
@@ -48,10 +49,11 @@ function Extension() {
     });
   }, []);
 
-  // Amounts in the config are in the shop currency; without a rate in checkout
-  // we only act when the buyer pays in that currency. The Function still guards pricing.
-  const active = config !== null && config.currencyCode === currencyCode;
-  const cart = toCart(lines);
+  // Checkout has no exchange rate, so act only where every threshold is known in the
+  // buyer's currency: the config currency, or markets with explicit amounts.
+  // The Function (which does know the rate) still guards pricing everywhere.
+  const active = config !== null && supportsCurrency(config, currencyCode);
+  const cart = toCart(lines, currencyCode, config);
   const gifts = useGiftProducts(active ? config : null);
 
   useEffect(() => {
@@ -295,8 +297,10 @@ function readConfig(): GiftConfig | null {
  * the Function's pre-discount subtotal: the extension never adds a gift the
  * Function would refuse to make free.
  */
-function toCart(lines: CartLine[]): CartLike {
+function toCart(lines: CartLine[], currencyCode: string, config: GiftConfig | null): CartLike {
   return {
+    currencyCode,
+    rate: currencyCode === config?.currencyCode ? 1 : undefined,
     lines: lines.map((line) => ({
       id: line.id,
       productId: line.merchandise.product.id,

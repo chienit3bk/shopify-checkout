@@ -6,17 +6,25 @@
  *   - the discount Function (re-checks eligibility server-side and makes the gift free),
  *   - unit tests.
  *
- * Amounts in a config are in the shop's currency. Callers pass a cart whose
- * amounts are already in that currency (the Function converts with
- * `presentmentCurrencyRate`; the UI extension only acts when the checkout
- * currency matches the config currency).
+ * Cart amounts are in the buyer's (presentment) currency. A spend threshold
+ * resolves per currency: an explicit market amount (`amounts.EUR = 70`) wins;
+ * otherwise the shop-currency `amount` is converted with the cart's `rate`.
+ * The Function always knows the rate (`presentmentCurrencyRate`); the UI
+ * extension only knows it when the buyer pays in the config currency, so it
+ * stays idle in currencies the config doesn't cover (see `supportsCurrency`).
  */
 
 /** Cart line attribute that marks a line as a gift. Value = rule id. Hidden in checkout (leading underscore). */
 export const GIFT_ATTRIBUTE_KEY = '_free_gift';
 
 export type Condition =
-  | {type: 'subtotal_at_least'; amount: number}
+  | {
+      type: 'subtotal_at_least';
+      /** In the config (shop) currency. */
+      amount: number;
+      /** Per-market overrides, e.g. {EUR: 70}: round local prices instead of converted ones. */
+      amounts?: Record<string, number>;
+    }
   | {type: 'total_quantity_at_least'; quantity: number}
   | {type: 'product_in_cart'; productIds: string[]; minQuantity?: number}
   | {type: 'all'; conditions: Condition[]}
@@ -53,7 +61,7 @@ export interface CartLineLike {
   productId: string;
   variantId: string;
   quantity: number;
-  /** Line subtotal in the config currency. */
+  /** Line subtotal in the cart currency. */
   subtotal: number;
   /** Rule id from the gift attribute, or null for a normal line. */
   giftRuleId: string | null;
@@ -61,6 +69,10 @@ export interface CartLineLike {
 
 export interface CartLike {
   lines: CartLineLike[];
+  /** Cart (presentment) currency. Defaults to the config currency. */
+  currencyCode?: string;
+  /** Cart currency units per config-currency unit. Unknown = only explicit `amounts` apply. */
+  rate?: number;
 }
 
 export type CartChange =
@@ -71,7 +83,7 @@ export type CartChange =
 export interface Progress {
   ruleId: string;
   title: string;
-  /** Amount still needed to unlock the rule, in the config currency. */
+  /** Amount still needed to unlock the rule, in the cart currency. */
   remaining: number;
   /** 0..1, for a progress bar. */
   ratio: number;
@@ -89,8 +101,10 @@ export function cartSubtotal(cart: CartLike): number {
 export function matches(condition: Condition, cart: CartLike): boolean {
   const lines = paidLines(cart);
   switch (condition.type) {
-    case 'subtotal_at_least':
-      return cartSubtotal(cart) >= condition.amount;
+    case 'subtotal_at_least': {
+      const threshold = thresholdFor(condition, cart);
+      return threshold !== null && cartSubtotal(cart) >= threshold;
+    }
     case 'total_quantity_at_least':
       return lines.reduce((sum, line) => sum + line.quantity, 0) >= condition.quantity;
     case 'product_in_cart': {
@@ -107,6 +121,39 @@ export function matches(condition: Condition, cart: CartLike): boolean {
     case 'not':
       return !matches(condition.condition, cart);
   }
+}
+
+/** A spend threshold in the cart currency, or null when it can't be known (no rate, no override). */
+export function thresholdFor(
+  condition: Extract<Condition, {type: 'subtotal_at_least'}>,
+  cart: CartLike,
+): number | null {
+  const explicit = cart.currencyCode ? condition.amounts?.[cart.currencyCode] : undefined;
+  if (explicit !== undefined) return explicit;
+  const rate = cart.currencyCode === undefined ? 1 : cart.rate;
+  return rate === undefined ? null : round2(condition.amount * rate);
+}
+
+/**
+ * Whether every spend threshold can be resolved in this currency without an
+ * exchange rate — i.e. the UI extension can act safely.
+ */
+export function supportsCurrency(config: GiftConfig, currencyCode: string): boolean {
+  if (currencyCode === config.currencyCode) return true;
+  const covered = (condition: Condition): boolean => {
+    switch (condition.type) {
+      case 'subtotal_at_least':
+        return condition.amounts?.[currencyCode] !== undefined;
+      case 'all':
+      case 'any':
+        return condition.conditions.every(covered);
+      case 'not':
+        return covered(condition.condition);
+      default:
+        return true;
+    }
+  };
+  return config.rules.every((rule) => covered(rule.condition));
 }
 
 /** Rules the cart qualifies for, after resolving tier groups. */
@@ -226,7 +273,7 @@ export function nextUnlock(config: GiftConfig, cart: CartLike): Progress | null 
 function subtotalThreshold(condition: Condition, cart: CartLike): number | null {
   switch (condition.type) {
     case 'subtotal_at_least':
-      return condition.amount;
+      return thresholdFor(condition, cart);
     case 'all': {
       const needs = condition.conditions.map((child) => subtotalThreshold(child, cart));
       return needs.some((need) => need === null) ? null : Math.max(-Infinity, ...(needs as number[]));
@@ -263,7 +310,11 @@ function isCondition(value: unknown): value is Condition {
   if (!isObject(value)) return false;
   switch (value.type) {
     case 'subtotal_at_least':
-      return typeof value.amount === 'number';
+      return (
+        typeof value.amount === 'number' &&
+        (value.amounts === undefined ||
+          (isObject(value.amounts) && Object.values(value.amounts).every((amount) => typeof amount === 'number')))
+      );
     case 'total_quantity_at_least':
       return typeof value.quantity === 'number';
     case 'product_in_cart':

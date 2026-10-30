@@ -1,7 +1,12 @@
 query CartInput {
-  # Cart amounts are in the buyer's currency; rule amounts are in the shop's.
+  # Cart amounts are in the buyer's currency; rule amounts are in the shop's (plus optional per-market overrides).
   presentmentCurrencyRate
   cart {
+    cost {
+      subtotalAmount {
+        currencyCode
+      }
+    }
     lines {
       id
       quantity
