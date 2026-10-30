@@ -1,0 +1,24 @@
+# Learn more about configuring your checkout UI extension:
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration
+
+api_version = "2026-10"
+
+[[extensions]]
+name = "bfcm-offer"
+handle = "bfcm-offer"
+uid = "3a3c1675-ddea-cfb7-846a-d71349660c435f07d057"
+type = "ui_extension"
+
+# Campaign + offers JSON (scripts/bfcm-offer-config.json). Same metafield the discount Function reads.
+[[extensions.metafields]]
+namespace = "$app"
+key = "bfcm_offer_config"
+owner_type = "SHOP"
+
+# Storefront API: image and price of each offer product.
+[extensions.capabilities]
+api_access = true
+
+[[extensions.targeting]]
+module = "./src/Checkout.tsx"
+target = "purchase.checkout.cart-line-list.render-after"

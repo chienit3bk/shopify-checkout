@@ -1,0 +1,29 @@
+query CartInput {
+  cart {
+    lines {
+      id
+      quantity
+      offer: attribute(key: "_bfcm_offer") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+        }
+      }
+    }
+  }
+  shop {
+    # Shop-timezone date: the campaign window is checked on the server, not the buyer's clock.
+    localTime {
+      date
+    }
+    config: metafield(key: "bfcm_offer_config") {
+      jsonValue
+    }
+  }
+  discount {
+    discountClasses
+  }
+}
