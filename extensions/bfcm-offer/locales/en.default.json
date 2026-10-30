@@ -1,0 +1,7 @@
+{
+  "heading": "{{campaign}} early access",
+  "endsIn": "Ends in {{time}}",
+  "percentOff": "−{{percent}}%",
+  "addToOrder": "Add to order",
+  "added": "✓ {{product}} added — {{percent}}% off applied"
+}

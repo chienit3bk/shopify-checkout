@@ -1,0 +1,8 @@
+# Writes the BFCM campaign + offers to the app-owned shop metafield read by both extensions.
+# shopify app execute --store <shop> --query-file scripts/set-bfcm-config.graphql --variable-file <vars.json>
+mutation SetBfcmOfferConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "bfcm_offer_config", type: "json", value: $config}]) {
+    metafields { namespace key updatedAt }
+    userErrors { field message }
+  }
+}

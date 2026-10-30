@@ -135,6 +135,28 @@ Then in the checkout editor open **Apps → free-gift-checkout → Add block** a
   extension is the stricter of the two and never adds a gift the Function won't make free.
 - "Buyer removed the gift" is remembered for the current checkout only.
 
+## 2. BFCM checkout offer — countdown + one-click add-ons
+
+![BFCM offer demo](docs/demos/bfcm-offer.gif)
+
+A Black Friday block in checkout: a live countdown to the end of the campaign and
+discounted add-ons the buyer adds with one click. Adding an add-on can also unlock the
+free gifts from demo 1 — the two features share the same cart.
+
+**▶ [Try it](https://clark-nguyen.myshopify.com/cart/53265036247322:1)** (store password `ohsteg`) —
+add the face oil, then the mask, and watch both free gifts unlock.
+
+| Case | How |
+|---|---|
+| Countdown | Ticks every second to `endsAt` (exact time with offset) |
+| One-click add | `applyCartLinesChange` adds the variant tagged `_bfcm_offer = <offer id>` |
+| Price | A discount Function gives the offer's % off — only on the offer's variant, only up to `maxQuantity`, only between `startDate` and `endDate` in the **shop's timezone** (`shop.localTime.date`) |
+| Abuse | A `_bfcm_offer` tag on another product, an unknown offer id, or a late checkout gets no discount |
+| After the sale | The block disappears when the countdown ends; the Function stops discounting the next day (shop time) |
+
+Config: [`scripts/bfcm-offer-config.json`](scripts/bfcm-offer-config.json) · logic: `shared/bfcm/offer.ts`
+(14 unit tests) · Function fixtures: 5 wasm tests.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

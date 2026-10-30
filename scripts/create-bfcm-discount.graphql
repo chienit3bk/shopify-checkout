@@ -1,0 +1,15 @@
+# Creates the automatic discount backed by the BFCM offer Function (run once per store).
+mutation CreateBfcmOfferDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "BFCM checkout offer"
+      functionHandle: "bfcm-offer-discount"
+      discountClasses: [PRODUCT]
+      startsAt: "2026-01-01T00:00:00Z"
+      combinesWith: {orderDiscounts: true, productDiscounts: true, shippingDiscounts: true}
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message }
+  }
+}

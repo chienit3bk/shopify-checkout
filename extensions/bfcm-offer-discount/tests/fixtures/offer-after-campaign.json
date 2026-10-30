@@ -1,0 +1,60 @@
+{
+  "payload": {
+    "export": "cart-lines-discounts-generate-run",
+    "target": "cart.lines.discounts.generate.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 1,
+            "offer": {
+              "value": "oil-25"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/1"
+            }
+          }
+        ]
+      },
+      "shop": {
+        "localTime": {
+          "date": "2026-12-01"
+        },
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "campaign": "Black Friday",
+            "startDate": "2026-11-23",
+            "endDate": "2026-11-30",
+            "endsAt": "2026-11-30T23:59:59-05:00",
+            "offers": [
+              {
+                "id": "oil-25",
+                "title": "Black Friday add-on \u221225%",
+                "variantId": "gid://shopify/ProductVariant/1",
+                "percentOff": 25
+              },
+              {
+                "id": "mask-30",
+                "title": "Black Friday add-on \u221230%",
+                "variantId": "gid://shopify/ProductVariant/2",
+                "percentOff": 30,
+                "maxQuantity": 2
+              }
+            ]
+          }
+        }
+      },
+      "discount": {
+        "discountClasses": [
+          "PRODUCT"
+        ]
+      }
+    },
+    "output": {
+      "operations": []
+    }
+  }
+}
