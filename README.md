@@ -1,7 +1,7 @@
 # Shopify Checkout Demos
 
 Small, production-style demos of **Checkout UI Extensions** and **Shopify Functions**
-(API 2026-10 / Functions 2026-07, Preact + Polaris web components).
+(API 2026-10 for both the checkout extension and the Function, Preact + Polaris web components).
 
 ## 1. Rules-based free gift
 
