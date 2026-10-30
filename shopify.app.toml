@@ -17,7 +17,16 @@ embedded_app_direct_api_access = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_discounts"
+scopes = "read_products,write_discounts,write_orders"
 
 [auth]
 redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+
+# "How did you hear about us?" — written to a cart metafield in checkout and copied onto the order.
+[order.metafields.app.attribution]
+name = "How did you hear about us?"
+type = "single_line_text_field"
+capabilities.cart_to_order_copyable = true
+
+  [order.metafields.app.attribution.access]
+  admin = "merchant_read"

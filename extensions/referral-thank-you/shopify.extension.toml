@@ -1,0 +1,17 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "referral-thank-you"
+handle = "referral-thank-you"
+type = "ui_extension"
+uid = "4f5a2c18-3dfc-6f00-99f5-a6d49dd818b62a04c0f0"
+
+# {code, percentOff} written by the app (scripts/set-referral-config.graphql).
+[[extensions.metafields]]
+namespace = "$app"
+key = "referral_config"
+owner_type = "SHOP"
+
+[[extensions.targeting]]
+module = "./src/ThankYou.tsx"
+target = "purchase.thank-you.block.render"

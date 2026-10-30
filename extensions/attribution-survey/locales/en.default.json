@@ -1,0 +1,13 @@
+{
+  "question": "How did you hear about us?",
+  "otherLabel": "Tell us where",
+  "thanks": "Thanks \u2014 this helps us a lot.",
+  "sources": {
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "google": "Google search",
+    "friend": "A friend or family member",
+    "podcast": "A podcast",
+    "other": "Somewhere else"
+  }
+}

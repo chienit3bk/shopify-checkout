@@ -1,0 +1,17 @@
+# Creates the shareable referral code shown on the thank-you page (run once per store).
+mutation CreateReferralCode {
+  discountCodeBasicCreate(
+    basicCodeDiscount: {
+      title: "Referral — FRIENDS15"
+      code: "FRIENDS15"
+      startsAt: "2026-01-01T00:00:00Z"
+      context: {all: ALL}
+      customerGets: {value: {percentage: 0.15}, items: {all: true}}
+      appliesOncePerCustomer: true
+      combinesWith: {orderDiscounts: false, productDiscounts: true, shippingDiscounts: true}
+    }
+  ) {
+    codeDiscountNode { id }
+    userErrors { field message }
+  }
+}
