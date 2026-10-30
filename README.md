@@ -7,15 +7,30 @@ Small, production-style demos of **Checkout UI Extensions** and **Shopify Functi
 
 A free gift that adds itself in checkout and **can't be abused**: the checkout extension
 adds the gift line, and a discount Function independently re-checks the rules before
-making it free.
+making it free. Every gift is shown as a product card — image, name, crossed-out price,
+**FREE**, and a link to the product page — both once unlocked and as the next reward
+under the "spend $X more" bar.
+
+### ▶ Live demo
+
+Shopify Plus development store. The first time, Shopify asks for the store password
+**`ohsteg`** — enter it, then click the link again to land in checkout with that cart
+(test store, no real payment).
+
+| Try | Cart | What you should see |
+|---|---|---|
+| [Not there yet](https://clark-nguyen.myshopify.com/cart/53264714432794:1) | $600 snowboard | "Spend $100.00 more" + the gift you'll unlock |
+| [Tier 1](https://clark-nguyen.myshopify.com/cart/53264714858778:1) | $885.95 snowboard | Sample wax added for free, next tier shown |
+| [Complex rule](https://clark-nguyen.myshopify.com/cart/53264714629402:2) | 2× Complete snowboard | Bundle wax + sample wax, both free |
+| [Tier 2 + rule branch 2](https://clark-nguyen.myshopify.com/cart/53264715219226:1,53264714432794:1,53264715546906:1) | 3 snowboards, $2,374.95 | Special wax replaces sample wax; bundle wax via the "$2,000 + Hydrogen" branch |
 
 | Under the threshold | Tier 1 unlocked |
 |---|---|
 | ![Progress bar](docs/screenshots/00-progress.png) | ![Tier 1](docs/screenshots/01-tier-1-unlocked.png) |
 
-| Complex rule + tier 1 | Tier 2 replaces tier 1, complex rule excluded |
+| Complex rule + tier 1 | Tier 2 + complex rule ("$2,000 + Hydrogen" branch) |
 |---|---|
-| ![Complex rule](docs/screenshots/02-complex-rule-and-tier-1.png) | ![Tier 2](docs/screenshots/03-tier-2-exclusion.png) |
+| ![Complex rule](docs/screenshots/02-complex-rule-and-tier-1.png) | ![Tier 2](docs/screenshots/03-tier-2-and-rule-branch-2.png) |
 
 ### What it handles
 
@@ -50,7 +65,8 @@ flowchart LR
   writable only by the app.
 - **Extension** (`extensions/free-gift-checkout`) — plans the cart changes, applies them one at a
   time (parallel cart changes trip checkout's change throttle), and re-plans from the real `lines`
-  after every update instead of blindly retrying a failed call.
+  after every update instead of blindly retrying a failed call. Gift product cards come from one
+  Storefront API query per config (`api_access`).
 - **Function** (`extensions/free-gift-discount`) — `cart.lines.discounts.generate.run`; the
   source of truth for price.
 
@@ -102,7 +118,7 @@ shopify app execute --store <store> --query-file scripts/set-config.graphql \
 shopify app execute --store <store> --query-file scripts/create-discount.graphql
 ```
 
-Then add the **free-gift-checkout** block under the line items in the checkout editor.
+Then in the checkout editor open **Apps → free-gift-checkout → Add block** and save. After `shopify app deploy`, re-run `create-discount.graphql` if the discount was created against a dev preview (cleaning a dev preview deletes it).
 
 ### Known limits
 

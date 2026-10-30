@@ -6,6 +6,7 @@ import {
   type CartChange,
   type CartLike,
   type GiftConfig,
+  type GiftRule,
   GIFT_ATTRIBUTE_KEY,
   eligibleRules,
   nextUnlock,
@@ -51,6 +52,7 @@ function Extension() {
   // we only act when the buyer pays in that currency. The Function still guards pricing.
   const active = config !== null && config.currencyCode === currencyCode;
   const cart = toCart(lines);
+  const gifts = useGiftProducts(active ? config : null);
 
   useEffect(() => {
     if (!config || !active || !canChangeLines || syncing.current) return;
@@ -126,6 +128,7 @@ function Extension() {
   const inCart = eligible.filter((rule) => cart.lines.some((line) => line.giftRuleId === rule.id));
   const removedByBuyer = eligible.filter((rule) => declined.has(rule.id));
   const progress = nextUnlock(config, cart);
+  const nextRule = progress ? config.rules.find((rule) => rule.id === progress.ruleId) : undefined;
   const t = shopify.i18n.translate;
 
   if (!canChangeLines) {
@@ -135,8 +138,12 @@ function Extension() {
   return (
     <s-stack gap="base">
       {inCart.length > 0 && (
-        <s-banner tone="success" heading={t('unlockedHeading')}>
-          <s-text>{inCart.map((rule) => rule.title).join(', ')}</s-text>
+        <s-banner tone="success" heading={t('unlockedHeading', {count: inCart.length})}>
+          <s-stack gap="base">
+            {inCart.map((rule) => (
+              <GiftCard key={rule.id} rule={rule} gift={gifts[rule.giftVariantId]} />
+            ))}
+          </s-stack>
         </s-banner>
       )}
       {removedByBuyer.map((rule) => (
@@ -149,21 +156,131 @@ function Extension() {
           </s-stack>
         </s-banner>
       ))}
-      {progress && (
+      {progress && nextRule && (
         <s-box padding="base" background="subdued" borderRadius="base">
-          <s-stack gap="small-200">
-            <s-text>
-              {t('spendMore', {
-                amount: shopify.i18n.formatCurrency(progress.remaining, {currency: currencyCode}),
-                gift: progress.title,
-              })}
-            </s-text>
-            <s-progress value={progress.ratio} max={1} accessibilityLabel={t('progressLabel')} />
+          <s-stack gap="base">
+            <s-stack gap="small-200">
+              <s-text>
+                {t('spendMore', {
+                  amount: shopify.i18n.formatCurrency(progress.remaining, {currency: currencyCode}),
+                })}
+              </s-text>
+              <s-progress value={progress.ratio} max={1} accessibilityLabel={t('progressLabel')} />
+            </s-stack>
+            <GiftCard rule={nextRule} gift={gifts[nextRule.giftVariantId]} />
           </s-stack>
         </s-box>
       )}
     </s-stack>
   );
+}
+
+interface GiftProduct {
+  productTitle: string;
+  variantTitle: string;
+  imageUrl: string | null;
+  imageAlt: string;
+  price: number;
+  currencyCode: string;
+  url: string | null;
+}
+
+/** The gift as a product: image, name, crossed-out price, FREE, and a link to its page. */
+function GiftCard({rule, gift}: {rule: GiftRule; gift?: GiftProduct}) {
+  const t = shopify.i18n.translate;
+  const showVariant = gift && gift.variantTitle && gift.variantTitle !== 'Default Title';
+
+  return (
+    <s-stack direction="inline" gap="base" alignItems="center">
+      <s-product-thumbnail src={gift?.imageUrl ?? undefined} alt={gift?.imageAlt ?? rule.title} size="base" />
+      <s-stack gap="small-300">
+        {gift && (
+          <s-text type="small" color="subdued">
+            {rule.title}
+          </s-text>
+        )}
+        <s-text type="strong">{gift?.productTitle ?? rule.title}</s-text>
+        {showVariant && <s-text color="subdued">{gift.variantTitle}</s-text>}
+        <s-stack direction="inline" gap="small-200" alignItems="center">
+          {gift && (
+            <s-text type="redundant">{shopify.i18n.formatCurrency(gift.price, {currency: gift.currencyCode})}</s-text>
+          )}
+          <s-badge>{t('free')}</s-badge>
+        </s-stack>
+        {gift?.url && (
+          <s-link href={gift.url} target="_blank">
+            {t('viewProduct')}
+          </s-link>
+        )}
+      </s-stack>
+    </s-stack>
+  );
+}
+
+const GIFT_PRODUCTS_QUERY = `query GiftProducts($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on ProductVariant {
+      id
+      title
+      image { url altText }
+      price { amount currencyCode }
+      product { title handle onlineStoreUrl featuredImage { url altText } }
+    }
+  }
+}`;
+
+interface GiftProductsData {
+  nodes: Array<{
+    id: string;
+    title: string;
+    image: {url: string; altText: string | null} | null;
+    price: {amount: string; currencyCode: string};
+    product: {
+      title: string;
+      handle: string;
+      onlineStoreUrl: string | null;
+      featuredImage: {url: string; altText: string | null} | null;
+    };
+  } | null>;
+}
+
+/** Product details for every gift in the config, keyed by variant id (Storefront API, once per config). */
+function useGiftProducts(config: GiftConfig | null): Record<string, GiftProduct> {
+  const [products, setProducts] = useState<Record<string, GiftProduct>>({});
+  const ids = config ? [...new Set(config.rules.map((rule) => rule.giftVariantId))].sort() : [];
+  const key = ids.join(',');
+
+  useEffect(() => {
+    if (ids.length === 0) return;
+    shopify
+      .query<GiftProductsData>(GIFT_PRODUCTS_QUERY, {variables: {ids}})
+      .then(({data}) => {
+        const next: Record<string, GiftProduct> = {};
+        for (const node of data?.nodes ?? []) {
+          if (!node) continue;
+          const image = node.image ?? node.product.featuredImage;
+          next[node.id] = {
+            productTitle: node.product.title,
+            variantTitle: node.title,
+            imageUrl: image?.url ?? null,
+            imageAlt: image?.altText ?? node.product.title,
+            price: Number(node.price.amount),
+            currencyCode: node.price.currencyCode,
+            url: node.product.onlineStoreUrl ?? productUrl(node.product.handle),
+          };
+        }
+        setProducts(next);
+      })
+      .catch((error) => console.error('[free-gift] gift products query failed', error));
+  }, [key]);
+
+  return products;
+}
+
+/** `onlineStoreUrl` is null while a store is password-protected; fall back to the storefront domain + handle. */
+function productUrl(handle: string): string | null {
+  const base = shopify.shop.storefrontUrl ?? `https://${shopify.shop.myshopifyDomain}`;
+  return handle ? `${base.replace(/\/$/, '')}/products/${handle}` : null;
 }
 
 function readConfig(): GiftConfig | null {

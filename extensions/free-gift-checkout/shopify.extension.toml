@@ -15,6 +15,10 @@ namespace = "$app"
 key = "free_gift_config"
 owner_type = "SHOP"
 
+# Storefront API: image, price and URL of each gift product.
+[extensions.capabilities]
+api_access = true
+
 # Right under the line items, so the gift and the "spend $X more" bar sit next to the cart.
 [[extensions.targeting]]
 module = "./src/Checkout.tsx"
