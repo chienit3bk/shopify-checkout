@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "shipping-cutoff"
+handle = "trust-and-shipping"
+type = "ui_extension"
+uid = "a406c3c4-11e5-f5a4-bf4d-1f3bc92fd7d3d0da0c8c"
+
+# Cut-off config (scripts/shipping-cutoff-config.json), written by the app.
+[[extensions.metafields]]
+namespace = "$app"
+key = "shipping_cutoff_config"
+owner_type = "SHOP"
+
+# "Order within 2h 41m — ships today" above the shipping options.
+[[extensions.targeting]]
+module = "./src/Cutoff.tsx"
+target = "purchase.checkout.shipping-option-list.render-before"

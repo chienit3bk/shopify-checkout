@@ -180,6 +180,27 @@ customer — created by `scripts/create-referral-code.graphql`), a copy button
 
 Logic: `shared/attribution/survey.ts`, `shared/referral/referral.ts` (12 unit tests).
 
+## 4. Shipping cut-off countdown + trust badges
+
+![Cut-off and trust demo](docs/demos/trust-and-cutoff.gif)
+
+**"Order within 2h 41m — ships today."** Above the shipping options, computed on the
+**warehouse clock** (shop timezone), not the buyer's: weekends and holidays are skipped
+(Wednesday evening before Thanksgiving → "ships Friday"), and a seasonal line counts down to
+the last order date ("Order by Fri, Dec 18 for Christmas delivery"). DST-safe: local wall
+times are converted to UTC in two passes.
+
+**Trust badges under the payment methods**, worded by the merchant in the checkout editor
+(extension settings — no redeploy to change the copy), with sensible defaults.
+
+| Detail | How |
+|---|---|
+| Cut-off config | `scripts/shipping-cutoff-config.json` (timezone, cut-off time, ship days, holidays, seasonal deadline) |
+| Timezone math | `Intl.DateTimeFormat` with the warehouse IANA zone; 12 unit tests incl. DST, holidays, UTC-vs-local midnight |
+| Badge copy | 4 `single_line_text_field` settings; empty → localized default |
+
+Logic: `shared/shipping/cutoff.ts`.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.
