@@ -1,156 +1,120 @@
-# Shopify App Template - Extension Only
+# Shopify Checkout Demos
 
-This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using [Preact](https://preactjs.com/) and [Vite](https://vite.dev/). It uses Shopify's [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access) and [App Bridge](https://shopify.dev/docs/api/app-bridge) to make authenticated calls to the Shopify Admin API directly from the browser — no server required.
+Small, production-style demos of **Checkout UI Extensions** and **Shopify Functions**
+(API 2026-10 / Functions 2026-07, Preact + Polaris web components).
 
-Rather than cloning this repo, follow the [Quick Start steps](#quick-start) below.
+## 1. Rules-based free gift
 
-## Quick start
+A free gift that adds itself in checkout and **can't be abused**: the checkout extension
+adds the gift line, and a discount Function independently re-checks the rules before
+making it free.
 
-### Prerequisites
+| Under the threshold | Tier 1 unlocked |
+|---|---|
+| ![Progress bar](docs/screenshots/00-progress.png) | ![Tier 1](docs/screenshots/01-tier-1-unlocked.png) |
 
-Before you begin, you'll need to [download and install the Shopify CLI](https://shopify.dev/docs/apps/tools/cli/getting-started) if you haven't already.
+| Complex rule + tier 1 | Tier 2 replaces tier 1, complex rule excluded |
+|---|---|
+| ![Complex rule](docs/screenshots/02-complex-rule-and-tier-1.png) | ![Tier 2](docs/screenshots/03-tier-2-exclusion.png) |
 
-### Setup
+### What it handles
+
+| Case | Example from the demo config |
+|---|---|
+| Spend threshold | $700+ → free sample ski wax |
+| Tiers (best one wins) | $1,500+ → special ski wax *instead of* the sample |
+| Nested AND / OR / NOT | (2+ Complete snowboards **and not** a Multi-managed snowboard) **or** ($2,000+ **and** a Hydrogen snowboard) → bundle wax |
+| Progress | "Spend $100.00 more to get Free sample ski wax" + progress bar |
+| Cart changes | Gift removed when the cart stops qualifying; extra units trimmed; duplicate lines dropped |
+| Config changes | Gift for a deleted rule or an old variant is removed and replaced |
+| Abuse | A `_free_gift` attribute added by hand (Cart API, theme) gets **no** discount unless the cart really qualifies |
+| Multi-currency | The Function converts with `presentmentCurrencyRate`; the extension stays idle outside the config currency |
+| Checkout limits | Respects cart instructions (`canAddCartLine` / `canRemoveCartLine`), e.g. accelerated checkouts |
+
+### How it works
+
+```mermaid
+flowchart LR
+  M[(Shop metafield<br/>$app.free_gift_config)] --> E[Checkout UI extension]
+  M --> F[Discount Function]
+  R[shared/free-gift/rules.ts] --> E
+  R --> F
+  E -- "add / remove gift line<br/>attribute _free_gift = rule id" --> C[Cart]
+  C --> F
+  F -- "100% off, only if eligible,<br/>only the configured variant,<br/>capped per rule" --> C
+```
+
+- **One rules engine** (`shared/free-gift/rules.ts`) — pure TypeScript, bundled into both the
+  extension and the Function's wasm, so the UI and the price can't disagree.
+- **One config** in an app-owned shop metafield (`$app` namespace), readable by both halves and
+  writable only by the app.
+- **Extension** (`extensions/free-gift-checkout`) — plans the cart changes, applies them one at a
+  time (parallel cart changes trip checkout's change throttle), and re-plans from the real `lines`
+  after every update instead of blindly retrying a failed call.
+- **Function** (`extensions/free-gift-discount`) — `cart.lines.discounts.generate.run`; the
+  source of truth for price.
+
+### Rules format
+
+```jsonc
+{
+  "version": 1,
+  "currencyCode": "USD",
+  "rules": [
+    {
+      "id": "spend-700",
+      "title": "Free sample ski wax",
+      "giftVariantId": "gid://shopify/ProductVariant/…",
+      "group": "spend", "priority": 1,          // tiers: highest priority in a group wins
+      "condition": {"type": "subtotal_at_least", "amount": 700}
+    }
+  ]
+}
+```
+
+Conditions: `subtotal_at_least`, `total_quantity_at_least`, `product_in_cart` (with
+`minQuantity`), and the combinators `all`, `any`, `not`. Full example:
+[`scripts/demo-config.json`](scripts/demo-config.json).
+
+### Tests
 
 ```shell
-shopify app init --template=https://github.com/Shopify/shopify-app-template-extension-only
+npm test
 ```
 
-### Local Development
+- **31 unit tests** for the rules engine — every case above, plus mutation-checked (breaking the
+  gift-line exclusion or the variant check makes the suite fail).
+- **7 Function tests** that build the wasm and run it against fixtures: eligible, attribute added
+  by hand, quantity capped, wrong variant, complex rule + tier, presentment currency, no config.
+- Manually verified on a Shopify Plus dev store (screenshots above), including the abuse case.
+
+### Run it
 
 ```shell
-shopify app dev
+npm install
+shopify app dev --store <your-dev-store>
+
+# write the rules (edit scripts/demo-config.json first: variant/product ids, currency)
+shopify app execute --store <store> --query-file scripts/set-config.graphql \
+  --variables '{"shopId":"gid://shopify/Shop/<id>","config":"<demo-config.json as a string>"}'
+
+# create the automatic discount backed by the Function (once per store)
+shopify app execute --store <store> --query-file scripts/create-discount.graphql
 ```
 
-Press P to open the URL to your app. Once you click install, you can start development.
+Then add the **free-gift-checkout** block under the line items in the checkout editor.
 
-Local development is powered by [Shopify CLI](https://shopify.dev/docs/apps/build/cli-for-apps/test-apps-locally). It logs into your account, connects to an app, provides environment variables, updates remote config, creates a tunnel and provides commands to generate extensions.
+### Known limits
 
-## How it works
+- Rule amounts are in one currency; the extension only acts when the buyer pays in it
+  (the Function still prices correctly in any currency).
+- The extension compares line totals *after* line discounts, the Function *before* — so the
+  extension is the stricter of the two and never adds a gift the Function won't make free.
+- "Buyer removed the gift" is remembered for the current checkout only.
 
-### Authentication
+---
 
-This template uses [Shopify managed installation](https://shopify.dev/docs/apps/build/authentication-authorization/app-installation). Shopify handles the OAuth flow and app installation automatically. Once installed, the app is fully embedded in the Shopify Admin.
-
-### Querying data
-
-This template uses [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access) — the Shopify Admin API is called directly from the browser using App Bridge. No server-side code is needed.
-
-This template comes pre-configured with examples of querying data using GraphQL with direct API access, and using [metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects) to store and retrieve structured app data — see [/shared/models/faq.ts](./shared/models/faq.ts).
-
-### App Bridge
-
-[App Bridge](https://shopify.dev/docs/api/app-bridge) is loaded automatically in embedded apps.
-
-### Polaris Web Components
-
-This template uses [Polaris Web Components](https://shopify.dev/docs/api/app-home/web-components) — the native custom element version of Polaris that works in any framework (including Preact). No additional package installation is required as they are provided automatically in the Shopify Admin iframe.
-
-## GraphQL Codegen
-
-This template is pre-configured with [GraphQL Codegen](https://the-guild.dev/graphql/codegen) to generate TypeScript types from your GraphQL queries.
-
-To regenerate types after updating queries:
-
-```shell
-npm run codegen
-```
-
-To watch for changes:
-
-```shell
-npm run codegen:watch
-```
-
-## Build
-
-Build the app by running:
-
-Using npm:
-
-```shell
-npm run build
-```
-
-Using yarn:
-
-```shell
-yarn build
-```
-
-Using pnpm:
-
-```shell
-pnpm run build
-```
-
-## Shopify Dev MCP
-
-This template is configured with the Shopify Dev MCP. This instructs [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot), [Claude Code](https://claude.com/product/claude-code), and [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) to use the Shopify Dev MCP.
-
-For more information on the Shopify Dev MCP please read [the documentation](https://shopify.dev/docs/apps/build/devmcp).
-
-## Metafields and Metaobjects
-
-This template uses [metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects) and [metafields](https://shopify.dev/docs/apps/custom-data/metafields) to store structured app data without a custom database.
-
-### Metaobject: FAQ
-
-The template defines a `faq` metaobject type for storing FAQ entries. Each FAQ has a question, answer, a flag to control visibility on the FAQ page, and optional product associations.
-
-Defined in `shopify.app.toml`:
-
-```toml
-[metaobjects.app.faq]
-name = "FAQ"
-
-[metaobjects.app.faq.fields.question]
-name = "Question"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.faq.fields.answer]
-name = "Answer"
-type = "multi_line_text_field"
-required = true
-
-[metaobjects.app.faq.fields.show_on_faq_page]
-name = "Show on FAQ page"
-type = "boolean"
-
-[metaobjects.app.faq.fields.products]
-name = "Products"
-type = "list.product_reference"
-```
-
-### Metafield: Product FAQ
-
-A metafield definition links individual products to a FAQ metaobject entry, allowing merchants to associate a FAQ with specific products.
-
-```toml
-[product.metafields.app.faq]
-name = "FAQ"
-description = "FAQ for this product"
-type = "metaobject_reference<$app:faq>"
-access.admin = "merchant_read_write"
-```
-
-These definitions are automatically synced to Shopify when you run `shopify app dev` or `shopify app deploy`. See [/shared/models/faq.ts](./shared/models/faq.ts) for the client-side model that reads and writes these metaobjects via the Admin GraphQL API.
-
-## Resources
-
-Preact & Vite:
-
-- [Preact docs](https://preactjs.com/guide/v10/getting-started)
-- [Vite docs](https://vite.dev/)
-
-Shopify:
-
-- [Intro to Shopify apps](https://shopify.dev/docs/apps/getting-started)
-- [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access)
-- [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
-- [App Bridge](https://shopify.dev/docs/api/app-bridge)
-- [Polaris Web Components](https://shopify.dev/docs/api/app-home/web-components)
-- [Metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects)
-- [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
-- [Shopify Functions](https://shopify.dev/docs/api/functions)
+Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.
+[Upwork](https://www.upwork.com/freelancers/~01d98f2acd2861ac4f) ·
+[LinkedIn](https://www.linkedin.com/in/clark-nguyen-149413272/) ·
+[dev.to](https://dev.to/chienit3bk)

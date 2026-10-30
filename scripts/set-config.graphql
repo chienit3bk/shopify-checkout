@@ -1,0 +1,8 @@
+# Writes the rules to the app-owned shop metafield read by both extensions.
+# shopify app execute --store <shop> --query-file scripts/set-config.graphql --variable-file <vars.json>
+mutation SetFreeGiftConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "free_gift_config", type: "json", value: $config}]) {
+    metafields { namespace key updatedAt }
+    userErrors { field message }
+  }
+}

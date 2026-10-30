@@ -1,0 +1,16 @@
+# Creates the automatic discount backed by the free-gift Function (run once per store).
+# shopify app execute --store <shop> --query-file scripts/create-discount.graphql
+mutation CreateFreeGiftDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "Free gift"
+      functionHandle: "free-gift-discount"
+      discountClasses: [PRODUCT]
+      startsAt: "2026-01-01T00:00:00Z"
+      combinesWith: {orderDiscounts: true, productDiscounts: true, shippingDiscounts: true}
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message }
+  }
+}

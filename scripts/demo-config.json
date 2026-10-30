@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "currencyCode": "USD",
+  "rules": [
+    {
+      "id": "spend-700",
+      "title": "Free sample ski wax",
+      "giftVariantId": "gid://shopify/ProductVariant/53264714957082",
+      "group": "spend",
+      "priority": 1,
+      "condition": {"type": "subtotal_at_least", "amount": 700}
+    },
+    {
+      "id": "spend-1500",
+      "title": "Free special ski wax",
+      "giftVariantId": "gid://shopify/ProductVariant/53264714924314",
+      "group": "spend",
+      "priority": 2,
+      "condition": {"type": "subtotal_at_least", "amount": 1500}
+    },
+    {
+      "id": "board-bundle",
+      "title": "Free ski wax for your snowboard bundle",
+      "giftVariantId": "gid://shopify/ProductVariant/53264714891546",
+      "condition": {
+        "type": "any",
+        "conditions": [
+          {
+            "type": "all",
+            "conditions": [
+              {"type": "product_in_cart", "productIds": ["gid://shopify/Product/10490354696474"], "minQuantity": 2},
+              {"type": "not", "condition": {"type": "product_in_cart", "productIds": ["gid://shopify/Product/10490354893082"]}}
+            ]
+          },
+          {
+            "type": "all",
+            "conditions": [
+              {"type": "subtotal_at_least", "amount": 2000},
+              {"type": "product_in_cart", "productIds": ["gid://shopify/Product/10490354729242"]}
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
