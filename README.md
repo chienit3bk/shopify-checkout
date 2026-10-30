@@ -157,6 +157,29 @@ add the face oil, then the mask, and watch both free gifts unlock.
 Config: [`scripts/bfcm-offer-config.json`](scripts/bfcm-offer-config.json) · logic: `shared/bfcm/offer.ts`
 (14 unit tests) · Function fixtures: 5 wasm tests.
 
+## 3. Post-purchase: attribution survey + referral code
+
+![Post-purchase demo](docs/demos/bfcm-post-purchase.gif)
+
+**"How did you hear about us?" — stored on the order, no backend.** The thank-you page can't
+write to an order, so the question sits right above **Pay now**. The answer is saved to a cart
+metafield, and an order metafield definition with the `cart_to_order_copyable` capability
+(declared in `shopify.app.toml`) copies it onto the order — verified on test order #1001
+(`$app.attribution = "instagram"`).
+
+**Referral block on the thank-you page.** A shareable code (`FRIENDS15`, 15% off, once per
+customer — created by `scripts/create-referral-code.graphql`), a copy button
+(`s-clipboard-item`) and a link that applies the code automatically (`/discount/<code>`).
+
+| Detail | How |
+|---|---|
+| Survey answers | Fixed list + free text for "somewhere else" (trimmed, 80 chars max) |
+| Accelerated checkouts | Skipped when `canSetCartMetafields` is false |
+| Reading answers | Order metafield (merchant read access); apps reading orders need protected customer data access |
+| Referral config | `{code, percentOff}` in an app-owned shop metafield (`scripts/referral-config.json`) |
+
+Logic: `shared/attribution/survey.ts`, `shared/referral/referral.ts` (12 unit tests).
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

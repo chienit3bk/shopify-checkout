@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "attribution-survey"
+handle = "attribution-survey"
+type = "ui_extension"
+uid = "c8989a07-37d3-5e1a-7166-03364d017c3fa533e546"
+
+# Cart metafield written by the survey; copied to the order by the definition in shopify.app.toml.
+[[extensions.metafields]]
+namespace = "$app"
+key = "attribution"
+owner_type = "CART"
+
+# Right above the Pay button, after the buyer has seen everything else.
+[[extensions.targeting]]
+module = "./src/Checkout.tsx"
+target = "purchase.checkout.actions.render-before"
