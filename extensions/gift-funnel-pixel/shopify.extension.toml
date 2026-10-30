@@ -1,0 +1,21 @@
+name = "gift-funnel-pixel"
+type = "web_pixel_extension"
+uid = "f30a0110-d6eb-8f2c-2056-c07df2fe350e04a6e0e4"
+
+runtime_context = "strict"
+
+# Counts only gift interactions and order totals — no personal data.
+[customer_privacy]
+analytics = true
+marketing = false
+preferences = false
+sale_of_data = "disabled"
+
+[settings]
+type = "object"
+
+# HTTPS collector, or "none" to keep the totals in the store's localStorage only (Shopify requires a value).
+[settings.fields.endpoint]
+name = "Collector URL"
+description = "HTTPS endpoint that receives each event as JSON, or none"
+type = "single_line_text_field"
