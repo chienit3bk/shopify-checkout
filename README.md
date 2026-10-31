@@ -344,6 +344,10 @@ of the rule's variants free. Two gotchas found live:
   list it was loaded for, or the block adds the sold-out gift before the answer arrives and the
   buyer gets Shopify's "Out of stock" dialog.
 
+### Week 2 recap — delivery
+
+![Week 2 recap](docs/demos/week-2-recap.gif)
+
 ## 11. Delivery rules — hide, rename, reorder (delivery customization Function)
 
 ![Delivery rules demo](docs/demos/delivery-rules.gif)
