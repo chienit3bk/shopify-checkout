@@ -1,0 +1,77 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "buyerIdentity": {
+          "purchasingCompany": null,
+          "customer": {
+            "numberOfOrders": 0
+          },
+          "isAuthenticated": true
+        },
+        "cost": {
+          "subtotalAmount": {
+            "amount": "30.0",
+            "currencyCode": "EUR"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 1,
+            "cost": {
+              "totalAmount": {
+                "amount": "30.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/patches",
+                "title": "Hydrogel Eye Patches"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "type": "min_subtotal",
+                "amount": 25,
+                "firstOrderAmount": 40,
+                "currencyCode": "EUR"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "The minimum first order is 40.00 EUR. Add 10.00 EUR more to check out.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

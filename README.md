@@ -432,6 +432,29 @@ No UI block needed — checkout shows the errors itself.
 Setup: `scripts/set-cart-rules-config.graphql` (with `scripts/cart-rules-config.json`),
 `scripts/activate-cart-rules.graphql`.
 
+## 15. B2B: minimum quantity, case packs, first-order minimum
+
+![B2B cart rules demo](docs/demos/b2b-cart-rules.gif)
+
+Same `cart-rules` Function; every rule can be scoped with `"buyer": "b2b"` (buying for a company
+location) or `"retail"`:
+- `min_quantity` — "The minimum for Purifying Clay Mask is 3 (you have 2)." No `productIds` =
+  every product.
+- `case_pack` — "Hydrogel Eye Patches ships in cases of 6. Change the quantity to 6 or 12 (you
+  have 8)."
+- `min_subtotal` + `firstOrderAmount` — €500 first order, €300 after, from the company location's
+  order count.
+
+Two things the live test caught:
+- **The minimum uses the Subtotal the buyer sees.** Line `subtotalAmount` in the Function is
+  *before* item discounts, so a "buy 2 get 1" cart showing $268 passed a $300 minimum. The
+  Function now reads `cart.cost.subtotalAmount` (after item discounts) minus gift and service lines.
+- **Order history counts only when signed in.** A guest who types an email gets that customer's
+  `numberOfOrders` — anyone can type anyone's email — so it's used only with `isAuthenticated`.
+
+The demo was recorded with the B2B rules applied to every buyer (a B2B login needs the buyer's
+email code); `scripts/cart-rules-config.json` scopes them to company buyers.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

@@ -4,15 +4,31 @@ query CartValidationsGenerateRunInput {
   }
   presentmentCurrencyRate
   cart {
+    buyerIdentity {
+      # B2B rules apply when buying for a company location; first-order minimum uses its history.
+      purchasingCompany {
+        location {
+          ordersCount
+        }
+      }
+      customer {
+        numberOfOrders
+      }
+      # A guest's email can name anyone's account; order history counts only when signed in.
+      isAuthenticated
+    }
     cost {
+      # The "Subtotal" the buyer sees: after item discounts, before order discounts.
       subtotalAmount {
+        amount
         currencyCode
       }
     }
     lines {
       quantity
       cost {
-        subtotalAmount {
+        # After item discounts, so a free "buy 2 get 1" unit counts as 0.
+        totalAmount {
           amount
         }
       }
