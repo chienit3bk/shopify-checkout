@@ -33,6 +33,7 @@ export function cartLinesDiscountsGenerateRun(input: CartInput): CartLinesDiscou
       giftRuleId: line.giftRule?.value ?? null,
       variantId: line.merchandise.__typename === 'ProductVariant' ? line.merchandise.id : '',
       productId: line.merchandise.__typename === 'ProductVariant' ? line.merchandise.product.id : '',
+      inGiftCollection: line.merchandise.__typename === 'ProductVariant' && line.merchandise.product.inGiftCollection,
     })),
   };
 

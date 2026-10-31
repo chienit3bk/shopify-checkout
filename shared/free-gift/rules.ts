@@ -27,6 +27,8 @@ export type Condition =
     }
   | {type: 'total_quantity_at_least'; quantity: number}
   | {type: 'product_in_cart'; productIds: string[]; minQuantity?: number}
+  /** Any product from the config's `giftCollectionIds` (Function: `inAnyCollection` via input variables). */
+  | {type: 'gift_collection_in_cart'; minQuantity?: number}
   | {type: 'all'; conditions: Condition[]}
   | {type: 'any'; conditions: Condition[]}
   | {type: 'not'; condition: Condition};
@@ -41,6 +43,8 @@ export interface GiftRule {
    * never added automatically — the buyer's choice is the gift line in the cart.
    */
   giftOptions?: string[];
+  /** Out-of-stock fallback: tried in order when `giftVariantId` can't be added. */
+  fallbackVariantIds?: string[];
   /** Units given for free. Defaults to 1. */
   giftQuantity?: number;
   condition: Condition;
@@ -59,6 +63,12 @@ export interface GiftConfig {
   /** ISO currency of every amount in the config, e.g. "USD". */
   currencyCode: string;
   rules: GiftRule[];
+  /**
+   * Collections for `gift_collection_in_cart`. The Function can't read this shop metafield
+   * into `inAnyCollection(ids:)`, so the same list is mirrored into the discount's
+   * input-variables metafield (`scripts/set-gift-collections.graphql`).
+   */
+  giftCollectionIds?: string[];
 }
 
 export interface CartLineLike {
@@ -70,6 +80,8 @@ export interface CartLineLike {
   subtotal: number;
   /** Rule id from the gift attribute, or null for a normal line. */
   giftRuleId: string | null;
+  /** Product is in one of the config's gift collections. */
+  inGiftCollection?: boolean;
 }
 
 export interface CartLike {
@@ -94,9 +106,11 @@ export interface Progress {
   ratio: number;
 }
 
-/** Variants a rule may give: the picker options, or its single gift. */
+/** Variants a rule may give: the picker options, or its gift followed by its out-of-stock fallbacks. */
 export function giftVariants(rule: GiftRule): string[] {
-  return rule.giftOptions && rule.giftOptions.length > 0 ? rule.giftOptions : [rule.giftVariantId];
+  return rule.giftOptions && rule.giftOptions.length > 0
+    ? rule.giftOptions
+    : [rule.giftVariantId, ...(rule.fallbackVariantIds ?? [])];
 }
 
 /** A rule where the buyer picks the gift (so it is never auto-added). */
@@ -127,6 +141,10 @@ export function matches(condition: Condition, cart: CartLike): boolean {
       const quantity = lines
         .filter((line) => wanted.has(line.productId))
         .reduce((sum, line) => sum + line.quantity, 0);
+      return quantity >= (condition.minQuantity ?? 1);
+    }
+    case 'gift_collection_in_cart': {
+      const quantity = lines.filter((line) => line.inGiftCollection).reduce((sum, line) => sum + line.quantity, 0);
       return quantity >= (condition.minQuantity ?? 1);
     }
     case 'all':
@@ -194,11 +212,14 @@ export function eligibleRules(config: GiftConfig, cart: CartLike): GiftRule[] {
  * The changes that bring the cart's gift lines in line with the rules:
  * add missing gifts, drop gifts that no longer qualify, trim extra units.
  * Rules in `declinedRuleIds` (the buyer removed that gift) are never re-added.
+ * A gift in `unavailableVariantIds` (out of stock) is replaced by the rule's first
+ * available fallback; with none left, the rule adds nothing.
  */
 export function planGiftChanges(
   config: GiftConfig,
   cart: CartLike,
   declinedRuleIds: ReadonlySet<string> = new Set(),
+  unavailableVariantIds: ReadonlySet<string> = new Set(),
 ): CartChange[] {
   const eligible = new Map(eligibleRules(config, cart).map((rule) => [rule.id, rule]));
   const changes: CartChange[] = [];
@@ -222,12 +243,9 @@ export function planGiftChanges(
 
   for (const rule of eligible.values()) {
     if (kept.has(rule.id) || declinedRuleIds.has(rule.id) || isPickerRule(rule)) continue;
-    changes.push({
-      type: 'add',
-      ruleId: rule.id,
-      variantId: rule.giftVariantId,
-      quantity: rule.giftQuantity ?? 1,
-    });
+    const variantId = giftVariants(rule).find((id) => !unavailableVariantIds.has(id));
+    if (!variantId) continue;
+    changes.push({type: 'add', ruleId: rule.id, variantId, quantity: rule.giftQuantity ?? 1});
   }
   return changes;
 }
@@ -362,9 +380,14 @@ export function parseConfig(raw: unknown): GiftConfig | null {
       typeof rule.giftVariantId === 'string' &&
       (rule.giftOptions === undefined ||
         (Array.isArray(rule.giftOptions) && rule.giftOptions.every((id: unknown) => typeof id === 'string'))) &&
+      (rule.fallbackVariantIds === undefined ||
+        (Array.isArray(rule.fallbackVariantIds) && rule.fallbackVariantIds.every((id: unknown) => typeof id === 'string'))) &&
       isCondition(rule.condition),
   );
-  return {version: 1, currencyCode: data.currencyCode, rules};
+  const giftCollectionIds = Array.isArray(data.giftCollectionIds)
+    ? data.giftCollectionIds.filter((id: unknown): id is string => typeof id === 'string')
+    : undefined;
+  return {version: 1, currencyCode: data.currencyCode, rules, giftCollectionIds};
 }
 
 function isCondition(value: unknown): value is Condition {
@@ -380,6 +403,8 @@ function isCondition(value: unknown): value is Condition {
       return typeof value.quantity === 'number';
     case 'product_in_cart':
       return Array.isArray(value.productIds) && value.productIds.every((id) => typeof id === 'string');
+    case 'gift_collection_in_cart':
+      return value.minQuantity === undefined || typeof value.minQuantity === 'number';
     case 'all':
     case 'any':
       return Array.isArray(value.conditions) && value.conditions.every(isCondition);

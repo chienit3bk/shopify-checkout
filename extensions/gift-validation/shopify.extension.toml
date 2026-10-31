@@ -10,6 +10,7 @@ description = "t:description"
   [[extensions.targeting]]
   target = "cart.validations.generate.run"
   input_query = "src/cart_validations_generate_run.graphql"
+  input_variables = { namespace = "$app:free-gift", key = "input-variables" }
   export = "cart-validations-generate-run"
 
   [extensions.build]

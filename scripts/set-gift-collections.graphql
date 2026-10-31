@@ -1,0 +1,16 @@
+# Mirrors the config's giftCollectionIds into the input-variables metafield of each Function owner
+# (free-gift discount + gift validation), where inAnyCollection(ids: $giftCollectionIds) reads it.
+# shopify app execute --store <shop> --query-file scripts/set-gift-collections.graphql --variable-file <vars.json>
+# vars: {"discountId": "gid://shopify/DiscountAutomaticNode/…", "validationId": "gid://shopify/Validation/…",
+#        "variables": "{\"giftCollectionIds\":[\"gid://shopify/Collection/…\"]}"}
+mutation SetGiftCollections($discountId: ID!, $validationId: ID!, $variables: String!) {
+  metafieldsSet(
+    metafields: [
+      {ownerId: $discountId, namespace: "$app:free-gift", key: "input-variables", type: "json", value: $variables}
+      {ownerId: $validationId, namespace: "$app:free-gift", key: "input-variables", type: "json", value: $variables}
+    ]
+  ) {
+    metafields { key namespace owner { __typename } }
+    userErrors { field message }
+  }
+}

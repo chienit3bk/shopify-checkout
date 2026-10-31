@@ -24,7 +24,8 @@
               "__typename": "ProductVariant",
               "id": "gid://shopify/ProductVariant/201",
               "product": {
-                "id": "gid://shopify/Product/2"
+                "id": "gid://shopify/Product/2",
+                "inGiftCollection": false
               }
             }
           },
@@ -43,7 +44,8 @@
               "__typename": "ProductVariant",
               "id": "gid://shopify/ProductVariant/902",
               "product": {
-                "id": "gid://shopify/Product/900"
+                "id": "gid://shopify/Product/900",
+                "inGiftCollection": false
               }
             }
           },
@@ -62,7 +64,8 @@
               "__typename": "ProductVariant",
               "id": "gid://shopify/ProductVariant/903",
               "product": {
-                "id": "gid://shopify/Product/900"
+                "id": "gid://shopify/Product/900",
+                "inGiftCollection": false
               }
             }
           }

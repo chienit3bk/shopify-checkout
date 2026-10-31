@@ -39,14 +39,15 @@ function Extension() {
   const canChangeLines = shopify.instructions.value.lines.canAddCartLine && shopify.instructions.value.lines.canRemoveCartLine;
 
   const [declined, setDeclined] = useState<Set<string>>(new Set());
-  const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+  /** Gift variants that failed to add (e.g. sold out since the page loaded) — the rule moves to its fallback. */
+  const [failedVariants, setFailedVariants] = useState<Set<string>>(new Set());
   /** Bumped after each sync so changes made by the buyer mid-sync get re-planned. */
   const [syncRound, setSyncRound] = useState(0);
   const syncing = useRef(false);
   /** Picker rule whose choice is being applied (button spinner). */
   const [choosing, setChoosing] = useState<string | null>(null);
-  /** Rules whose gift line has been seen in the cart (so a later absence means it was removed). */
-  const seenInCart = useRef(new Set<string>());
+  /** Rule → gift variant seen in the cart (so a later absence means it was removed). */
+  const seenInCart = useRef(new Map<string, string>());
   const addAttempts = useRef(new Map<string, number>());
 
   // Restore gifts the buyer declined earlier in this checkout (survives reloads).
@@ -62,23 +63,34 @@ function Extension() {
   // buyer's currency: the config currency, or markets with explicit amounts.
   // The Function (which does know the rate) still guards pricing everywhere.
   const active = config !== null && supportsCurrency(config, currencyCode);
-  const cart = toCart(lines, currencyCode, config);
-  const gifts = useGiftProducts(active ? config : null);
+  const collectionMembers = useGiftCollectionMembers(active ? config : null, lines);
+  const cart = toCart(lines, currencyCode, config, collectionMembers);
+  const [gifts, giftsLoaded] = useGiftProducts(active ? config : null);
+  const unavailableVariants = new Set([
+    ...failedVariants,
+    ...Object.entries(gifts)
+      .filter(([, gift]) => !gift.available)
+      .map(([variantId]) => variantId),
+  ]);
+  const unavailableKey = [...unavailableVariants].sort().join(',');
 
   useEffect(() => {
-    if (!config || !active || !canChangeLines || syncing.current) return;
+    // Wait for availability: adding a sold-out gift first makes Shopify show its "Out of stock" dialog.
+    if (!config || !active || !canChangeLines || !giftsLoaded || syncing.current) return;
 
     const eligibleIds = new Set(eligibleRules(config, cart).map((rule) => rule.id));
     const giftIdsInCart = new Set(cart.lines.map((line) => line.giftRuleId).filter((id): id is string => id !== null));
-    giftIdsInCart.forEach((id) => seenInCart.current.add(id));
+    cart.lines.forEach((line) => line.giftRuleId && seenInCart.current.set(line.giftRuleId, line.variantId));
 
     // A gift that was in the cart is gone while the cart still qualifies → the buyer removed it.
     // Picker gifts are never auto-added, so their removal needs no memory (the picker stays open).
     const pickerIds = new Set(config.rules.filter(isPickerRule).map((rule) => rule.id));
     const newlyDeclined: string[] = [];
-    for (const id of [...seenInCart.current]) {
+    for (const [id, variantId] of [...seenInCart.current]) {
       if (giftIdsInCart.has(id)) continue;
       seenInCart.current.delete(id);
+      // Shopify drops a sold-out line by itself — that's not the buyer saying no: fall back instead.
+      if (unavailableVariants.has(variantId)) continue;
       if (eligibleIds.has(id) && !pickerIds.has(id)) newlyDeclined.push(id);
     }
     if (newlyDeclined.length) {
@@ -88,8 +100,7 @@ function Extension() {
       return; // re-plan on the next render with the updated declined set
     }
 
-    const skip = new Set([...declined, ...unavailable]);
-    const changes = planGiftChanges(config, cart, skip);
+    const changes = planGiftChanges(config, cart, declined, unavailableVariants);
     if (changes.length === 0) return;
 
     syncing.current = true;
@@ -99,7 +110,7 @@ function Extension() {
         syncing.current = false;
         setSyncRound((round) => round + 1);
       });
-  }, [lines, active, canChangeLines, declined, unavailable, syncRound]);
+  }, [lines, active, canChangeLines, giftsLoaded, declined, unavailableKey, collectionMembers, syncRound]);
 
   /**
    * One change at a time: parallel cart changes trip checkout's change throttle.
@@ -109,8 +120,8 @@ function Extension() {
   async function applySequentially(changes: CartChange[]) {
     for (const change of changes) {
       if (change.type === 'add') {
-        const attempts = (addAttempts.current.get(change.ruleId) ?? 0) + 1;
-        addAttempts.current.set(change.ruleId, attempts);
+        const attempts = (addAttempts.current.get(change.variantId) ?? 0) + 1;
+        addAttempts.current.set(change.variantId, attempts);
         const result = await shopify.applyCartLinesChange({
           type: 'addCartLine',
           merchandiseId: change.variantId,
@@ -118,7 +129,7 @@ function Extension() {
           attributes: [{key: GIFT_ATTRIBUTE_KEY, value: change.ruleId}],
         });
         if (result.type === 'error' && attempts >= MAX_ADD_ATTEMPTS) {
-          setUnavailable((prev) => new Set([...prev, change.ruleId]));
+          setFailedVariants((prev) => new Set([...prev, change.variantId]));
         }
       } else if (change.type === 'remove') {
         await shopify.applyCartLinesChange({type: 'removeCartLine', id: change.lineId, quantity: change.quantity});
@@ -145,7 +156,8 @@ function Extension() {
   }
 
   function addBack(ruleId: string) {
-    addAttempts.current.delete(ruleId);
+    const rule = config?.rules.find((candidate) => candidate.id === ruleId);
+    rule && giftVariants(rule).forEach((variantId) => addAttempts.current.delete(variantId));
     const next = new Set([...declined].filter((id) => id !== ruleId));
     setDeclined(next);
     shopify.storage.write(DECLINED_STORAGE_KEY, [...next]);
@@ -175,7 +187,12 @@ function Extension() {
         <s-banner tone="success" heading={t('unlockedHeading', {count: inCart.length})}>
           <s-stack gap="base">
             {inCart.map((rule) => (
-              <GiftCard key={rule.id} rule={rule} gift={gifts[rule.giftVariantId]} />
+              <GiftCard
+                key={rule.id}
+                rule={rule}
+                // The variant actually in the cart: a fallback when the gift sold out.
+                gift={gifts[cart.lines.find((line) => line.giftRuleId === rule.id)?.variantId ?? rule.giftVariantId]}
+              />
             ))}
           </s-stack>
         </s-banner>
@@ -295,6 +312,8 @@ interface GiftProduct {
   price: number;
   currencyCode: string;
   url: string | null;
+  /** Storefront `availableForSale`: false → the rule uses its fallback. */
+  available: boolean;
 }
 
 /** The gift as a product: image, name, crossed-out price, FREE, and a link to its page (not in compact rows). */
@@ -335,6 +354,7 @@ const GIFT_PRODUCTS_QUERY = `query GiftProducts($ids: [ID!]!) {
     ... on ProductVariant {
       id
       title
+      availableForSale
       image { url altText }
       price { amount currencyCode }
       product { title handle onlineStoreUrl featuredImage { url altText } }
@@ -346,6 +366,7 @@ interface GiftProductsData {
   nodes: Array<{
     id: string;
     title: string;
+    availableForSale: boolean;
     image: {url: string; altText: string | null} | null;
     price: {amount: string; currencyCode: string};
     product: {
@@ -357,14 +378,22 @@ interface GiftProductsData {
   } | null>;
 }
 
-/** Product details for every gift in the config, keyed by variant id (Storefront API, once per config). */
-function useGiftProducts(config: GiftConfig | null): Record<string, GiftProduct> {
+/**
+ * Product details for every gift in the config, keyed by variant id (Storefront API, once
+ * per config), and whether the answer is in (a failed query still counts as loaded).
+ */
+function useGiftProducts(config: GiftConfig | null): [Record<string, GiftProduct>, boolean] {
   const [products, setProducts] = useState<Record<string, GiftProduct>>({});
+  /** The ids the last answer was for: "loaded" for an earlier config (e.g. before metafields arrive) doesn't count. */
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const ids = config ? [...new Set(config.rules.flatMap(giftVariants))].sort() : [];
   const key = ids.join(',');
 
   useEffect(() => {
-    if (ids.length === 0) return;
+    if (ids.length === 0) {
+      setLoadedKey(key);
+      return;
+    }
     shopify
       .query<GiftProductsData>(GIFT_PRODUCTS_QUERY, {variables: {ids}})
       .then(({data}) => {
@@ -380,14 +409,57 @@ function useGiftProducts(config: GiftConfig | null): Record<string, GiftProduct>
             price: Number(node.price.amount),
             currencyCode: node.price.currencyCode,
             url: node.product.onlineStoreUrl ?? productUrl(node.product.handle),
+            available: node.availableForSale,
           };
         }
         setProducts(next);
       })
-      .catch((error) => console.error('[free-gift] gift products query failed', error));
+      .catch((error) => console.error('[free-gift] gift products query failed', error))
+      .finally(() => setLoadedKey(key));
   }, [key]);
 
-  return products;
+  return [products, loadedKey === key];
+}
+
+const PRODUCT_COLLECTIONS_QUERY = `query ProductCollections($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on Product {
+      id
+      collections(first: 250) { nodes { id } }
+    }
+  }
+}`;
+
+interface ProductCollectionsData {
+  nodes: Array<{id: string; collections: {nodes: Array<{id: string}>}} | null>;
+}
+
+/**
+ * Cart products that belong to the config's gift collections (Storefront API). The
+ * Function gets the same answer from `inAnyCollection(ids: $giftCollectionIds)`.
+ */
+function useGiftCollectionMembers(config: GiftConfig | null, lines: CartLine[]): ReadonlySet<string> {
+  const [members, setMembers] = useState<ReadonlySet<string>>(new Set());
+  const collections = config?.giftCollectionIds ?? [];
+  const productIds = [...new Set(lines.map((line) => line.merchandise.product.id))].sort();
+  const key = `${collections.join(',')}|${productIds.join(',')}`;
+
+  useEffect(() => {
+    if (collections.length === 0 || productIds.length === 0) return;
+    const wanted = new Set(collections);
+    shopify
+      .query<ProductCollectionsData>(PRODUCT_COLLECTIONS_QUERY, {variables: {ids: productIds}})
+      .then(({data}) => {
+        const next = new Set<string>();
+        for (const node of data?.nodes ?? []) {
+          if (node?.collections.nodes.some((collection) => wanted.has(collection.id))) next.add(node.id);
+        }
+        setMembers(next);
+      })
+      .catch((error) => console.error('[free-gift] collections query failed', error));
+  }, [key]);
+
+  return members;
 }
 
 /** `onlineStoreUrl` is null while a store is password-protected; fall back to the storefront domain + handle. */
@@ -407,7 +479,12 @@ function readConfig(): GiftConfig | null {
  * Amounts before discounts, like the Function's `cost.subtotalAmount` — so a volume
  * or order discount doesn't make the block ask for more spend than the Function needs.
  */
-function toCart(lines: CartLine[], currencyCode: string, config: GiftConfig | null): CartLike {
+function toCart(
+  lines: CartLine[],
+  currencyCode: string,
+  config: GiftConfig | null,
+  collectionMembers: ReadonlySet<string>,
+): CartLike {
   const giftRuleOf = (line: CartLine) => line.attributes.find((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY)?.value ?? null;
   const amounts = amountsBeforeDiscounts(shopify.cost.subtotalAmount.value.amount, lines, (line) => giftRuleOf(line) === null);
   return {
@@ -420,6 +497,7 @@ function toCart(lines: CartLine[], currencyCode: string, config: GiftConfig | nu
       quantity: line.quantity,
       subtotal: amounts[i],
       giftRuleId: giftRuleOf(line),
+      inGiftCollection: collectionMembers.has(line.merchandise.product.id),
     })),
   };
 }

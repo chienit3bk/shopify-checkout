@@ -108,6 +108,20 @@
           "EUR": 110
         }
       }
+    },
+    {
+      "id": "tools-gift",
+      "title": "Free mini with any Tools & Body item",
+      "giftVariantId": "gid://shopify/ProductVariant/53265037099290",
+      "fallbackVariantIds": [
+        "gid://shopify/ProductVariant/53265037164826"
+      ],
+      "condition": {
+        "type": "gift_collection_in_cart"
+      }
     }
+  ],
+  "giftCollectionIds": [
+    "gid://shopify/Collection/527873409306"
   ]
 }

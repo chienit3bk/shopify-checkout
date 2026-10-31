@@ -24,7 +24,8 @@
               "__typename": "ProductVariant",
               "id": "gid://shopify/ProductVariant/101",
               "product": {
-                "id": "gid://shopify/Product/1"
+                "id": "gid://shopify/Product/1",
+                "inGiftCollection": false
               }
             }
           },
@@ -43,7 +44,8 @@
               "__typename": "ProductVariant",
               "id": "gid://shopify/ProductVariant/901",
               "product": {
-                "id": "gid://shopify/Product/900"
+                "id": "gid://shopify/Product/900",
+                "inGiftCollection": false
               }
             }
           }
