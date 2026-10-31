@@ -288,6 +288,31 @@ on the undiscounted part — otherwise it keeps asking for "1 more" after the fr
 Setup: `scripts/set-bogo-config.graphql` (`scripts/bogo-config.json`), then
 `scripts/create-bogo-discount.graphql`, then add the **bogo-nudge** block in the checkout editor.
 
+## 9. Tiered discounts — volume per SKU + spend on the order
+
+![Tiered discounts demo](docs/demos/tiered-discounts.gif)
+
+One config (`scripts/tiers-config.json`), one Function (`tiered-discount`) with **two discount
+classes**:
+
+| Class | Rule (Solvane demo) | Checkout block |
+|---|---|---|
+| PRODUCT | Gel Cleanser / Night Cream: 2+ → 5%, 4+ → 10%, 6+ → 15% (quantity summed per variant) | `volume-tiers` under the line: "Stock up & save: 2+ 5% · 4+ 10% · 6+ 15%" + "Add 1 more for 10% off" |
+| ORDER | $100+ → 5%, $150+ → 10% (EUR 90 / 140); gift lines and sale items excluded via `excludedCartLineIds` | `spend-tiers` above the discount field: "Spend $2.00 more for 10% off" |
+
+**Gotcha that broke every "spend $X more" bar.** Functions read `cost.subtotalAmount` — the
+line *before* discounts. Checkout UI extensions only get `cost.totalAmount` — *after* every
+discount, including the line's share of order discounts. With a 10% volume discount and a 5%
+order discount applied, the bar said "Spend $18.52 more" while the Function needed $2.00.
+Line discounts are listed on the line (`discountAllocations`), but a line's share of an *order*
+discount is baked into `totalAmount` and listed nowhere. `shared/cart/subtotal.ts` rebuilds the
+pre-discount amounts: line discounts from the line, order discounts from
+`shopify.cost.subtotalAmount − Σ line totals`, handed back in proportion. The free-gift,
+free-shipping and spend bars all use it, so the message matches the price.
+
+Setup: `scripts/set-tiers-config.graphql`, `scripts/create-tiered-discount.graphql`
+(`discountClasses: [PRODUCT, ORDER]`), then add **volume-tiers** and **spend-tiers** in the checkout editor.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

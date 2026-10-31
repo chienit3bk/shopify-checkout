@@ -1,0 +1,42 @@
+query CartInput {
+  # Cart amounts are in the buyer's currency; spend tiers are in the shop's (plus optional per-market overrides).
+  presentmentCurrencyRate
+  cart {
+    cost {
+      subtotalAmount {
+        currencyCode
+      }
+    }
+    lines {
+      id
+      quantity
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      # Gift lines are already free: never discounted, never counted.
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+          }
+        }
+      }
+    }
+  }
+  shop {
+    # App-owned config, also read by the checkout tier table and spend bar.
+    config: metafield(key: "tiers_config") {
+      jsonValue
+    }
+  }
+  discount {
+    discountClasses
+  }
+}

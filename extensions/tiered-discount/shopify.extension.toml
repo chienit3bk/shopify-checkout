@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "t:name"
+handle = "tiered-discount"
+type = "function"
+uid = "ce830c35-45ca-4b22-9394-937a4de5f435938f152f"
+description = "t:description"
+
+  # Volume tiers (product discount) and spend tiers (order discount) from one config.
+  [[extensions.targeting]]
+  target = "cart.lines.discounts.generate.run"
+  input_query = "src/cart_lines_discounts_generate_run.graphql"
+  export = "cart-lines-discounts-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

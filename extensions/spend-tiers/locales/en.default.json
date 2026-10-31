@@ -1,0 +1,5 @@
+{
+  "spendMore": "Spend {{amount}} more for {{percent}}% off",
+  "saving": "{{label}}: you're saving {{percent}}%",
+  "progress": "Progress towards the next discount"
+}

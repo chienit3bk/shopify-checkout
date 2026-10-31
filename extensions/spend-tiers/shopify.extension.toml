@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "spend-tiers"
+handle = "spend-tiers"
+type = "ui_extension"
+uid = "e56964b1-73d3-46ba-ba49-54ef94c8a006418adab9"
+
+# Tier config, also read by the tiered-discount Function.
+[[extensions.metafields]]
+namespace = "$app"
+key = "tiers_config"
+owner_type = "SHOP"
+
+# Above the discount code field: "Spend $30.00 more for 10% off".
+[[extensions.targeting]]
+module = "./src/Spend.tsx"
+target = "purchase.checkout.reductions.render-before"

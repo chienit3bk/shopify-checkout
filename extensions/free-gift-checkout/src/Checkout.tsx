@@ -17,6 +17,7 @@ import {
   planGiftChanges,
   supportsCurrency,
 } from '../../../shared/free-gift/rules';
+import {amountsBeforeDiscounts} from '../../../shared/cart/subtotal';
 import {type GiftEventData, type GiftEventName, GIFT_EVENT_PREFIX} from '../../../shared/analytics/gift-funnel';
 
 export default async () => {
@@ -403,21 +404,22 @@ function readConfig(): GiftConfig | null {
 }
 
 /**
- * Line totals here are after line discounts, so they can only be lower than
- * the Function's pre-discount subtotal: the extension never adds a gift the
- * Function would refuse to make free.
+ * Amounts before discounts, like the Function's `cost.subtotalAmount` — so a volume
+ * or order discount doesn't make the block ask for more spend than the Function needs.
  */
 function toCart(lines: CartLine[], currencyCode: string, config: GiftConfig | null): CartLike {
+  const giftRuleOf = (line: CartLine) => line.attributes.find((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY)?.value ?? null;
+  const amounts = amountsBeforeDiscounts(shopify.cost.subtotalAmount.value.amount, lines, (line) => giftRuleOf(line) === null);
   return {
     currencyCode,
     rate: currencyCode === config?.currencyCode ? 1 : undefined,
-    lines: lines.map((line) => ({
+    lines: lines.map((line, i) => ({
       id: line.id,
       productId: line.merchandise.product.id,
       variantId: line.merchandise.id,
       quantity: line.quantity,
-      subtotal: line.cost.totalAmount.amount,
-      giftRuleId: line.attributes.find((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY)?.value ?? null,
+      subtotal: amounts[i],
+      giftRuleId: giftRuleOf(line),
     })),
   };
 }

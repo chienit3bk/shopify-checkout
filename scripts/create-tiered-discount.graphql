@@ -1,0 +1,16 @@
+# Automatic discount backed by the tiered-discount Function: product (volume) + order (spend) classes.
+# shopify app execute --store <shop> --query-file scripts/create-tiered-discount.graphql
+mutation CreateTieredDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "Tiered discounts"
+      functionHandle: "tiered-discount"
+      discountClasses: [PRODUCT, ORDER]
+      startsAt: "2026-10-31T00:00:00Z"
+      combinesWith: {productDiscounts: true, orderDiscounts: false, shippingDiscounts: true}
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message code }
+  }
+}

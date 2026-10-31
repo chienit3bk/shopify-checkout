@@ -1,0 +1,171 @@
+{
+  "payload": {
+    "export": "cart-lines-discounts-generate-run",
+    "target": "cart.lines.discounts.generate.run",
+    "input": {
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 2,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "64.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/mask",
+              "product": {
+                "id": "gid://shopify/Product/mask"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/2",
+            "quantity": 2,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "64.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/mask",
+              "product": {
+                "id": "gid://shopify/Product/mask"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "currencyCode": "USD",
+            "volume": {
+              "productIds": [
+                "gid://shopify/Product/mask"
+              ],
+              "tiers": [
+                {
+                  "minQuantity": 2,
+                  "percent": 5
+                },
+                {
+                  "minQuantity": 4,
+                  "percent": 10
+                },
+                {
+                  "minQuantity": 6,
+                  "percent": 15
+                }
+              ],
+              "label": "Stock up & save"
+            },
+            "spend": {
+              "tiers": [
+                {
+                  "amount": 100,
+                  "amounts": {
+                    "EUR": 90
+                  },
+                  "percent": 5
+                },
+                {
+                  "amount": 150,
+                  "amounts": {
+                    "EUR": 140
+                  },
+                  "percent": 10
+                }
+              ],
+              "label": "Spend more, save more",
+              "excludedProductIds": [
+                "gid://shopify/Product/sale"
+              ]
+            }
+          }
+        }
+      },
+      "discount": {
+        "discountClasses": [
+          "PRODUCT",
+          "ORDER"
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "productDiscountsAdd": {
+            "candidates": [
+              {
+                "message": "Stock up & save \u2014 10% off",
+                "targets": [
+                  {
+                    "cartLine": {
+                      "id": "gid://shopify/CartLine/1"
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": "10.0"
+                  }
+                }
+              },
+              {
+                "message": "Stock up & save \u2014 10% off",
+                "targets": [
+                  {
+                    "cartLine": {
+                      "id": "gid://shopify/CartLine/2"
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": "10.0"
+                  }
+                }
+              }
+            ],
+            "selectionStrategy": "ALL"
+          }
+        },
+        {
+          "orderDiscountsAdd": {
+            "candidates": [
+              {
+                "message": "Spend more, save more \u2014 5% off",
+                "targets": [
+                  {
+                    "orderSubtotal": {
+                      "excludedCartLineIds": []
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": "5.0"
+                  }
+                }
+              }
+            ],
+            "selectionStrategy": "FIRST"
+          }
+        }
+      ]
+    }
+  }
+}

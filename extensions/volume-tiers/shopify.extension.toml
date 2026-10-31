@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "volume-tiers"
+handle = "volume-tiers"
+type = "ui_extension"
+uid = "c1e1b6a3-2314-4b99-bc53-a2be875bc662882ab255"
+
+# Tier config, also read by the tiered-discount Function.
+[[extensions.metafields]]
+namespace = "$app"
+key = "tiers_config"
+owner_type = "SHOP"
+
+# Under each eligible line: the tier ladder and "Add 2 more for 10% off".
+[[extensions.targeting]]
+module = "./src/Volume.tsx"
+target = "purchase.checkout.cart-line-item.render-after"
