@@ -1,0 +1,44 @@
+query CartDeliveryOptionsDiscountsGenerateRunInput {
+  # Cart amounts are in the buyer's currency; the threshold is in the shop's (plus optional per-market overrides).
+  presentmentCurrencyRate
+  cart {
+    cost {
+      subtotalAmount {
+        currencyCode
+      }
+    }
+    lines {
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            id
+          }
+        }
+      }
+    }
+    deliveryGroups {
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+  shop {
+    # App-owned config, also read by the checkout bar.
+    config: metafield(key: "free_shipping_config") {
+      jsonValue
+    }
+  }
+  discount {
+    discountClasses
+  }
+}

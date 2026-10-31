@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "currencyCode": "USD",
+  "amount": 120,
+  "amounts": {
+    "EUR": 110
+  },
+  "methods": ["Express"],
+  "excludedProductIds": [
+    "gid://shopify/Product/10490410664218",
+    "gid://shopify/Product/10490410565914"
+  ],
+  "label": "Free Express shipping"
+}

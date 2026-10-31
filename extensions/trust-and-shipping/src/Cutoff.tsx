@@ -2,20 +2,83 @@ import '@shopify/ui-extensions/preact';
 import {render} from 'preact';
 import {useEffect, useState} from 'preact/hooks';
 import {cutoffStatus, formatLeft, parseCutoffConfig} from '../../../shared/shipping/cutoff';
+import {freeShippingStatus, parseFreeShippingConfig} from '../../../shared/shipping/free-shipping';
 
 export default async () => {
   render(<Cutoff />, document.body);
 };
 
 const CONFIG_KEY = 'shipping_cutoff_config';
+const FREE_SHIPPING_KEY = 'free_shipping_config';
+/** Same line attribute the free-gift block sets; gift lines never count towards a threshold. */
+const GIFT_ATTRIBUTE_KEY = '_free_gift';
 
 function Cutoff() {
+  return (
+    <s-stack gap="base">
+      <FreeShippingBar />
+      <CutoffBanner />
+    </s-stack>
+  );
+}
+
+function shopMetafield(key: string): unknown {
+  return shopify.appMetafields.value.find(({target, metafield}) => target.type === 'shop' && metafield.key === key)
+    ?.metafield.value;
+}
+
+/**
+ * "Add $24.00 for free Express shipping" — counted like the discount Function counts:
+ * excluded products and gift lines don't help. Line totals here are after line
+ * discounts, so the bar can only be more conservative than the Function.
+ */
+function FreeShippingBar() {
+  const t = shopify.i18n.translate;
+  const config = parseFreeShippingConfig(shopMetafield(FREE_SHIPPING_KEY));
+  if (!config) return null;
+
+  const currencyCode = shopify.cost.subtotalAmount.value.currencyCode;
+  const status = freeShippingStatus(config, {
+    currencyCode,
+    // No exchange rate in checkout: unknown currencies without an explicit amount stay hidden.
+    rate: undefined,
+    lines: shopify.lines.value.map((line) => ({
+      productId: line.merchandise.product.id,
+      subtotal: line.cost.totalAmount.amount,
+      isGift: line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY),
+    })),
+  });
+  if (status.threshold === null) return null;
+
+  return (
+    <s-box padding="base" background="subdued" borderRadius="base">
+      <s-stack gap="small-200">
+        <s-stack direction="inline" gap="small-200" alignItems="center">
+          <s-icon type={status.unlocked ? 'check-circle' : 'delivery'} />
+          <s-text type="strong">
+            {status.unlocked
+              ? t('freeShippingUnlocked', {label: config.label})
+              : t('freeShippingAway', {
+                  amount: shopify.i18n.formatCurrency(status.remaining, {currency: currencyCode}),
+                  label: config.label.toLowerCase(),
+                })}
+          </s-text>
+        </s-stack>
+        {!status.unlocked && <s-progress value={status.ratio} max={1} accessibilityLabel={t('freeShippingProgress')} />}
+        {status.excludedCount > 0 && !status.unlocked && (
+          <s-text type="small" color="subdued">
+            {t('freeShippingExcluded', {count: status.excludedCount})}
+          </s-text>
+        )}
+      </s-stack>
+    </s-box>
+  );
+}
+
+function CutoffBanner() {
   const t = shopify.i18n.translate;
   const now = useMinuteClock();
-  const entry = shopify.appMetafields.value.find(
-    ({target, metafield}) => target.type === 'shop' && metafield.key === CONFIG_KEY,
-  );
-  const config = entry ? parseCutoffConfig(entry.metafield.value) : null;
+  const config = parseCutoffConfig(shopMetafield(CONFIG_KEY));
   if (!config) return null;
 
   const status = cutoffStatus(config, now);

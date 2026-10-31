@@ -250,6 +250,25 @@ Activate: `shopify app execute --query-file scripts/activate-gift-validation.gra
 Logic: `chooseGift` and `invalidGiftLines` in `shared/free-gift/rules.ts`; 5 wasm fixtures in
 `extensions/gift-validation/tests/fixtures`.
 
+## 7. Free Express shipping over $120 — sale items don't count
+
+![Free Express shipping demo](docs/demos/free-express-shipping.gif)
+
+A shipping rate condition ("free over $X") only sees the **cart total**. Merchants keep asking
+for the threshold to ignore some items — sale items, "always ships free" products, gift
+lines — and to apply to one method only. A delivery discount Function can do both:
+
+| Cart | Sale items | Counts | Express |
+|---|---|---|---|
+| $142.00 | $42.00 | $100.00 | $15.00 — "Add $20.00 for free express shipping" |
+| $180.00 | $42.00 | $138.00 | **FREE** — "Free Express shipping unlocked" |
+
+- **One config** (`scripts/free-shipping-config.json`): threshold, per-market amounts (`EUR: 110`), methods (`["Express"]`, matched by title), excluded products, label.
+- **Function** `free-shipping-discount` (`cart.delivery-options.discounts.generate.run`): 100% off the matching delivery options once the counted lines reach the threshold.
+- **Checkout bar** (in the shipping block above the methods): same rule from `shared/shipping/free-shipping.ts`, plus "1 sale item doesn't count towards free shipping" so the buyer knows why.
+
+Setup: `scripts/set-free-shipping-config.graphql`, then `scripts/create-free-shipping-discount.graphql`.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

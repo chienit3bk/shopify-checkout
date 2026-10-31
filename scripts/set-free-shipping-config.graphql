@@ -1,0 +1,8 @@
+# Writes scripts/free-shipping-config.json to the app-owned shop metafield (Function + checkout bar).
+# shopify app execute --store <shop> --query-file scripts/set-free-shipping-config.graphql --variable-file <vars.json>
+mutation SetFreeShippingConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "free_shipping_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}

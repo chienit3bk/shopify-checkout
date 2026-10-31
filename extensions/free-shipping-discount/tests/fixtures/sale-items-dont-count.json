@@ -1,0 +1,103 @@
+{
+  "payload": {
+    "export": "cart-delivery-options-discounts-generate-run",
+    "target": "cart.delivery-options.discounts.generate.run",
+    "input": {
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "cost": {
+              "subtotalAmount": {
+                "amount": "96.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/serum"
+              }
+            }
+          },
+          {
+            "cost": {
+              "subtotalAmount": {
+                "amount": "31.5"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/sale"
+              }
+            }
+          },
+          {
+            "cost": {
+              "subtotalAmount": {
+                "amount": "9.0"
+              }
+            },
+            "giftRule": {
+              "value": "spend-75"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/gift"
+              }
+            }
+          }
+        ],
+        "deliveryGroups": [
+          {
+            "deliveryOptions": [
+              {
+                "handle": "std-handle",
+                "title": "Standard"
+              },
+              {
+                "handle": "exp-handle",
+                "title": "Express"
+              }
+            ]
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "currencyCode": "USD",
+            "amount": 120,
+            "amounts": {
+              "EUR": 110
+            },
+            "methods": [
+              "Express"
+            ],
+            "excludedProductIds": [
+              "gid://shopify/Product/sale"
+            ],
+            "label": "Free Express shipping"
+          }
+        }
+      },
+      "discount": {
+        "discountClasses": [
+          "SHIPPING"
+        ]
+      }
+    },
+    "output": {
+      "operations": []
+    }
+  }
+}
