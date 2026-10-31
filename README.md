@@ -344,6 +344,31 @@ of the rule's variants free. Two gotchas found live:
   list it was loaded for, or the block adds the sold-out gift before the answer arrives and the
   buyer gets Shopify's "Out of stock" dialog.
 
+## 11. Delivery rules — hide, rename, reorder (delivery customization Function)
+
+![Delivery rules demo](docs/demos/delivery-rules.gif)
+
+One `delivery-customization` Function (`cart.delivery-options.transform.run`) and a list of
+rules in `scripts/delivery-rules-config.json`:
+
+| Action | Option | When |
+|---|---|---|
+| hide | Express | cart weight ≥ 1 kg (variant `weight` × quantity, any unit) |
+| rename | Standard → "Standard — USPS Ground (3–5 days)" | ships to US |
+| rename | Express → "Express — UPS 2nd Day Air" | ships to US |
+| move | Express to the top | US and subtotal ≥ $100 |
+
+Rules match options by their *original* title, so a rename never stops a later rule from
+matching, and a hidden option is never renamed or moved. Logic: `shared/delivery/rules.ts`.
+
+**Two features broke each other, caught live:** the renamed "Express — UPS 2nd Day Air" no
+longer matched the free-Express discount (fix: a title that *starts with* the method name
+matches), and the free-shipping bar still promised free Express on a cart where Express was
+hidden (fix: the bar only promises a method that's actually offered).
+
+Setup: `scripts/set-demo-weights.graphql` (demo catalog weights), `scripts/set-delivery-rules.graphql`,
+`scripts/activate-delivery-customization.graphql` (scope `write_delivery_customizations`).
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

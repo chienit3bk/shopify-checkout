@@ -1,0 +1,34 @@
+query CartDeliveryOptionsTransformRunInput {
+  cart {
+    cost {
+      subtotalAmount {
+        amount
+      }
+    }
+    lines {
+      quantity
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          weight
+          weightUnit
+        }
+      }
+    }
+    deliveryGroups {
+      deliveryAddress {
+        countryCode
+      }
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+  shop {
+    # App-owned rules (scripts/delivery-rules-config.json).
+    config: metafield(key: "delivery_rules_config") {
+      jsonValue
+    }
+  }
+}

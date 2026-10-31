@@ -1,0 +1,18 @@
+# Sets realistic shipping weights on the Solvane demo catalog (for weight-based delivery rules).
+# shopify store execute --store <shop> --allow-mutations --query-file scripts/set-demo-weights.graphql
+mutation SetDemoWeights {
+  w0: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410500378", variants: [{id: "gid://shopify/ProductVariant/53265035952410", inventoryItem: {measurement: {weight: {value: 200, unit: GRAMS}}}}]) { userErrors { field message } }
+  w1: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410533146", variants: [{id: "gid://shopify/ProductVariant/53265035985178", inventoryItem: {measurement: {weight: {value: 250, unit: GRAMS}}}}]) { userErrors { field message } }
+  w2: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410565914", variants: [{id: "gid://shopify/ProductVariant/53265036083482", inventoryItem: {measurement: {weight: {value: 120, unit: GRAMS}}}}]) { userErrors { field message } }
+  w3: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410598682", variants: [{id: "gid://shopify/ProductVariant/53265036116250", inventoryItem: {measurement: {weight: {value: 90, unit: GRAMS}}}}]) { userErrors { field message } }
+  w4: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410664218", variants: [{id: "gid://shopify/ProductVariant/53265036181786", inventoryItem: {measurement: {weight: {value: 80, unit: GRAMS}}}}]) { userErrors { field message } }
+  w5: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410729754", variants: [{id: "gid://shopify/ProductVariant/53265036247322", inventoryItem: {measurement: {weight: {value: 120, unit: GRAMS}}}}]) { userErrors { field message } }
+  w6: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410762522", variants: [{id: "gid://shopify/ProductVariant/53265036280090", inventoryItem: {measurement: {weight: {value: 120, unit: GRAMS}}}}]) { userErrors { field message } }
+  w7: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410860826", variants: [{id: "gid://shopify/ProductVariant/53265036935450", inventoryItem: {measurement: {weight: {value: 150, unit: GRAMS}}}}]) { userErrors { field message } }
+  w8: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410926362", variants: [{id: "gid://shopify/ProductVariant/53265037000986", inventoryItem: {measurement: {weight: {value: 300, unit: GRAMS}}}}]) { userErrors { field message } }
+  w9: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410959130", variants: [{id: "gid://shopify/ProductVariant/53265037066522", inventoryItem: {measurement: {weight: {value: 60, unit: GRAMS}}}}]) { userErrors { field message } }
+  w10: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490410991898", variants: [{id: "gid://shopify/ProductVariant/53265037099290", inventoryItem: {measurement: {weight: {value: 40, unit: GRAMS}}}}]) { userErrors { field message } }
+  w11: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490411024666", variants: [{id: "gid://shopify/ProductVariant/53265037132058", inventoryItem: {measurement: {weight: {value: 50, unit: GRAMS}}}}]) { userErrors { field message } }
+  w12: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490411057434", variants: [{id: "gid://shopify/ProductVariant/53265037164826", inventoryItem: {measurement: {weight: {value: 40, unit: GRAMS}}}}]) { userErrors { field message } }
+  w13: productVariantsBulkUpdate(productId: "gid://shopify/Product/10490411090202", variants: [{id: "gid://shopify/ProductVariant/53265037197594", inventoryItem: {measurement: {weight: {value: 200, unit: GRAMS}}}}]) { userErrors { field message } }
+}

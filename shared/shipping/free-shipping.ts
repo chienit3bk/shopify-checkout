@@ -80,11 +80,18 @@ export function freeShippingStatus(config: FreeShippingConfig, cart: ShippingCar
   };
 }
 
-/** Delivery options the discount applies to (matched by title, so rates can be renamed per market). */
+/**
+ * Delivery options the discount applies to, matched by title. A title that starts with the
+ * method name also matches ("Express — UPS 2nd Day Air" for "Express"), because a delivery
+ * customization may rename options before discounts see them.
+ */
 export function matchesMethod(config: FreeShippingConfig, title: string | null | undefined): boolean {
   if (!title) return false;
-  const wanted = title.trim().toLowerCase();
-  return config.methods.some((method) => method.trim().toLowerCase() === wanted);
+  const actual = title.trim().toLowerCase();
+  return config.methods.some((method) => {
+    const wanted = method.trim().toLowerCase();
+    return actual === wanted || (actual.startsWith(wanted) && !/[a-z0-9]/.test(actual.charAt(wanted.length)));
+  });
 }
 
 export function parseFreeShippingConfig(raw: unknown): FreeShippingConfig | null {
