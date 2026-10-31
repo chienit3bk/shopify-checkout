@@ -7,21 +7,43 @@
       "gid://shopify/Product/10490410762522"
     ],
     "tiers": [
-      {"minQuantity": 2, "percent": 5},
-      {"minQuantity": 4, "percent": 10},
-      {"minQuantity": 6, "percent": 15}
+      {
+        "minQuantity": 2,
+        "percent": 5
+      },
+      {
+        "minQuantity": 4,
+        "percent": 10
+      },
+      {
+        "minQuantity": 6,
+        "percent": 15
+      }
     ],
     "label": "Stock up & save"
   },
   "spend": {
     "tiers": [
-      {"amount": 100, "amounts": {"EUR": 90}, "percent": 5},
-      {"amount": 150, "amounts": {"EUR": 140}, "percent": 10}
+      {
+        "amount": 100,
+        "amounts": {
+          "EUR": 90
+        },
+        "percent": 5
+      },
+      {
+        "amount": 150,
+        "amounts": {
+          "EUR": 140
+        },
+        "percent": 10
+      }
     ],
     "label": "Spend more, save more",
     "excludedProductIds": [
       "gid://shopify/Product/10490410664218",
-      "gid://shopify/Product/10490410565914"
+      "gid://shopify/Product/10490410565914",
+      "gid://shopify/Product/10493236117786"
     ]
   }
 }

@@ -5,6 +5,7 @@ import {
   type GiftConfig,
   chooseGift,
   eligibleRules,
+  markExcluded,
   freeGiftAllocations,
   invalidGiftLines,
   matches,
@@ -438,4 +439,11 @@ describe('gift collection + out-of-stock fallback', () => {
   test('parseConfig keeps giftCollectionIds and fallbacks', () => {
     expect(parseConfig(JSON.stringify(collectionConfig))).toEqual(collectionConfig);
   });
+});
+
+test('excluded products (services) never count towards a threshold', () => {
+  const cfg: GiftConfig = {...config, excludedProductIds: [SOCKS]};
+  const cart: CartLike = {lines: markExcluded(cfg, [line(SHIRT, 1, 48), line(SOCKS, 1, 5)])};
+  expect(eligibleRules(cfg, cart).map((r) => r.id)).toEqual([]);
+  expect(nextUnlock(cfg, cart)?.remaining).toBe(2);
 });

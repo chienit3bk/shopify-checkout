@@ -5,10 +5,13 @@
   "amounts": {
     "EUR": 110
   },
-  "methods": ["Express"],
+  "methods": [
+    "Express"
+  ],
   "excludedProductIds": [
     "gid://shopify/Product/10490410664218",
-    "gid://shopify/Product/10490410565914"
+    "gid://shopify/Product/10490410565914",
+    "gid://shopify/Product/10493236117786"
   ],
   "label": "Free Express shipping"
 }

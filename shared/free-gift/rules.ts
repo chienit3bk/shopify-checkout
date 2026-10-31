@@ -69,6 +69,8 @@ export interface GiftConfig {
    * input-variables metafield (`scripts/set-gift-collections.graphql`).
    */
   giftCollectionIds?: string[];
+  /** Products that never count towards a gift (services like carbon-neutral delivery, gift cards). */
+  excludedProductIds?: string[];
 }
 
 export interface CartLineLike {
@@ -82,6 +84,8 @@ export interface CartLineLike {
   giftRuleId: string | null;
   /** Product is in one of the config's gift collections. */
   inGiftCollection?: boolean;
+  /** Never counts towards a threshold or condition (see `excludedProductIds`). */
+  excluded?: boolean;
 }
 
 export interface CartLike {
@@ -118,9 +122,15 @@ export function isPickerRule(rule: GiftRule): boolean {
   return (rule.giftOptions?.length ?? 0) > 1;
 }
 
-/** Lines the buyer pays for. Gift lines never count towards a threshold. */
+/** Lines the buyer pays for. Gift lines and excluded products never count towards a threshold. */
 function paidLines(cart: CartLike): CartLineLike[] {
-  return cart.lines.filter((line) => line.giftRuleId === null);
+  return cart.lines.filter((line) => line.giftRuleId === null && !line.excluded);
+}
+
+/** Marks the lines of `excludedProductIds` (call when building a CartLike from checkout or Function input). */
+export function markExcluded(config: GiftConfig | null, lines: CartLineLike[]): CartLineLike[] {
+  const excluded = new Set(config?.excludedProductIds ?? []);
+  return excluded.size === 0 ? lines : lines.map((line) => ({...line, excluded: excluded.has(line.productId)}));
 }
 
 export function cartSubtotal(cart: CartLike): number {
@@ -387,7 +397,10 @@ export function parseConfig(raw: unknown): GiftConfig | null {
   const giftCollectionIds = Array.isArray(data.giftCollectionIds)
     ? data.giftCollectionIds.filter((id: unknown): id is string => typeof id === 'string')
     : undefined;
-  return {version: 1, currencyCode: data.currencyCode, rules, giftCollectionIds};
+  const excludedProductIds = Array.isArray(data.excludedProductIds)
+    ? data.excludedProductIds.filter((id: unknown): id is string => typeof id === 'string')
+    : undefined;
+  return {version: 1, currencyCode: data.currencyCode, rules, giftCollectionIds, excludedProductIds};
 }
 
 function isCondition(value: unknown): value is Condition {

@@ -4,7 +4,7 @@ import {
   CartInput,
   CartLinesDiscountsGenerateRunResult,
 } from '../generated/api';
-import {type CartLike, freeGiftAllocations, parseConfig} from '../../../shared/free-gift/rules';
+import {type CartLike, freeGiftAllocations, markExcluded, parseConfig} from '../../../shared/free-gift/rules';
 
 /**
  * Server-side half of the free gift: the checkout extension adds the gift line,
@@ -37,6 +37,7 @@ export function cartLinesDiscountsGenerateRun(input: CartInput): CartLinesDiscou
     })),
   };
 
+  cart.lines = markExcluded(config, cart.lines);
   const allocations = freeGiftAllocations(config, cart);
   if (allocations.length === 0) {
     return {operations: []};

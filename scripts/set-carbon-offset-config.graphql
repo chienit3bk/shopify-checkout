@@ -1,0 +1,8 @@
+# Writes scripts/carbon-offset-config.json to the app-owned shop metafield read by the carbon-offset block.
+# shopify app execute --store <shop> --query-file scripts/set-carbon-offset-config.graphql --variable-file <vars.json>
+mutation SetCarbonOffsetConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "carbon_offset_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}

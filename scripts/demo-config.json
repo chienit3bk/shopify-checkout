@@ -123,5 +123,8 @@
   ],
   "giftCollectionIds": [
     "gid://shopify/Collection/527873409306"
+  ],
+  "excludedProductIds": [
+    "gid://shopify/Product/10493236117786"
   ]
 }
