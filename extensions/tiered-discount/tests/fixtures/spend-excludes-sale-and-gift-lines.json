@@ -1,0 +1,156 @@
+{
+  "payload": {
+    "export": "cart-lines-discounts-generate-run",
+    "target": "cart.lines.discounts.generate.run",
+    "input": {
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "140.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/serum",
+              "product": {
+                "id": "gid://shopify/Product/serum"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/2",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "42.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/sale",
+              "product": {
+                "id": "gid://shopify/Product/sale"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/3",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "9.0"
+              }
+            },
+            "giftRule": {
+              "value": "spend-75"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/gift",
+              "product": {
+                "id": "gid://shopify/Product/gift"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "currencyCode": "USD",
+            "volume": {
+              "productIds": [
+                "gid://shopify/Product/mask"
+              ],
+              "tiers": [
+                {
+                  "minQuantity": 2,
+                  "percent": 5
+                },
+                {
+                  "minQuantity": 4,
+                  "percent": 10
+                },
+                {
+                  "minQuantity": 6,
+                  "percent": 15
+                }
+              ],
+              "label": "Stock up & save"
+            },
+            "spend": {
+              "tiers": [
+                {
+                  "amount": 100,
+                  "amounts": {
+                    "EUR": 90
+                  },
+                  "percent": 5
+                },
+                {
+                  "amount": 150,
+                  "amounts": {
+                    "EUR": 140
+                  },
+                  "percent": 10
+                }
+              ],
+              "label": "Spend more, save more",
+              "excludedProductIds": [
+                "gid://shopify/Product/sale"
+              ]
+            }
+          }
+        }
+      },
+      "discount": {
+        "discountClasses": [
+          "PRODUCT",
+          "ORDER"
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "orderDiscountsAdd": {
+            "candidates": [
+              {
+                "message": "Spend more, save more \u2014 5% off",
+                "targets": [
+                  {
+                    "orderSubtotal": {
+                      "excludedCartLineIds": [
+                        "gid://shopify/CartLine/2",
+                        "gid://shopify/CartLine/3"
+                      ]
+                    }
+                  }
+                ],
+                "value": {
+                  "percentage": {
+                    "value": "5.0"
+                  }
+                }
+              }
+            ],
+            "selectionStrategy": "FIRST"
+          }
+        }
+      ]
+    }
+  }
+}

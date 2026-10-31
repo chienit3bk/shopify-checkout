@@ -1,0 +1,8 @@
+{
+  "tierLadder": "{{label}}: {{tiers}}",
+  "addForTier": {
+    "one": "Add {{count}} more for {{percent}}% off",
+    "other": "Add {{count}} more for {{percent}}% off"
+  },
+  "atTopTier": "Best price: {{percent}}% off"
+}

@@ -2,6 +2,7 @@ import '@shopify/ui-extensions/preact';
 import {render} from 'preact';
 import {useEffect, useState} from 'preact/hooks';
 import {cutoffStatus, formatLeft, parseCutoffConfig} from '../../../shared/shipping/cutoff';
+import {amountsBeforeDiscounts} from '../../../shared/cart/subtotal';
 import {freeShippingStatus, parseFreeShippingConfig} from '../../../shared/shipping/free-shipping';
 
 export default async () => {
@@ -29,8 +30,7 @@ function shopMetafield(key: string): unknown {
 
 /**
  * "Add $24.00 for free Express shipping" — counted like the discount Function counts:
- * excluded products and gift lines don't help. Line totals here are after line
- * discounts, so the bar can only be more conservative than the Function.
+ * amounts before discounts, excluded products and gift lines don't help.
  */
 function FreeShippingBar() {
   const t = shopify.i18n.translate;
@@ -38,15 +38,14 @@ function FreeShippingBar() {
   if (!config) return null;
 
   const currencyCode = shopify.cost.subtotalAmount.value.currencyCode;
+  const lines = shopify.lines.value;
+  const isGift = (line: (typeof lines)[number]) => line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY);
+  const amounts = amountsBeforeDiscounts(shopify.cost.subtotalAmount.value.amount, lines, (line) => !isGift(line));
   const status = freeShippingStatus(config, {
     currencyCode,
     // No exchange rate in checkout: unknown currencies without an explicit amount stay hidden.
     rate: undefined,
-    lines: shopify.lines.value.map((line) => ({
-      productId: line.merchandise.product.id,
-      subtotal: line.cost.totalAmount.amount,
-      isGift: line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE_KEY),
-    })),
+    lines: lines.map((line, i) => ({productId: line.merchandise.product.id, subtotal: amounts[i], isGift: isGift(line)})),
   });
   if (status.threshold === null) return null;
 
