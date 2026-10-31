@@ -4,7 +4,7 @@ import {
   type CartValidationsGenerateRunResult,
   type ValidationError,
 } from '../generated/api';
-import {type CartLike, type InvalidGiftReason, invalidGiftLines, parseConfig} from '../../../shared/free-gift/rules';
+import {type CartLike, type InvalidGiftReason, invalidGiftLines, markExcluded, parseConfig} from '../../../shared/free-gift/rules';
 
 const MESSAGES: Record<InvalidGiftReason, (gift: string) => string> = {
   not_eligible: (gift) => `${gift} is no longer a free gift for this order. Remove it to continue.`,
@@ -37,6 +37,8 @@ export function cartValidationsGenerateRun(input: CartValidationsGenerateRunInpu
       inGiftCollection: line.merchandise.__typename === 'ProductVariant' && line.merchandise.product.inGiftCollection,
     })),
   };
+
+  cart.lines = markExcluded(config, cart.lines);
 
   const titles = new Map(
     input.cart.lines.map((line) => [

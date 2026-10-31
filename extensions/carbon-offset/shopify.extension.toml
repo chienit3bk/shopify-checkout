@@ -1,0 +1,22 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "carbon-offset"
+handle = "carbon-offset"
+type = "ui_extension"
+uid = "24940575-640d-4a23-8d48-46ca4df0fe53a2f2d231"
+
+# Which variant is the add-on (scripts/carbon-offset-config.json).
+[[extensions.metafields]]
+namespace = "$app"
+key = "carbon_offset_config"
+owner_type = "SHOP"
+
+# Storefront API: the add-on's price in the buyer's currency.
+[extensions.capabilities]
+api_access = true
+
+# Below the shipping options: one checkbox, one service line.
+[[extensions.targeting]]
+module = "./src/Offset.tsx"
+target = "purchase.checkout.shipping-option-list.render-after"

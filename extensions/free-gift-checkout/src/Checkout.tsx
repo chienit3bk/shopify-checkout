@@ -12,6 +12,7 @@ import {
   eligibleRules,
   giftVariants,
   isPickerRule,
+  markExcluded,
   nextUnlock,
   parseConfig,
   planGiftChanges,
@@ -65,6 +66,7 @@ function Extension() {
   const active = config !== null && supportsCurrency(config, currencyCode);
   const collectionMembers = useGiftCollectionMembers(active ? config : null, lines);
   const cart = toCart(lines, currencyCode, config, collectionMembers);
+  cart.lines = markExcluded(config, cart.lines);
   const [gifts, giftsLoaded] = useGiftProducts(active ? config : null);
   const unavailableVariants = new Set([
     ...failedVariants,

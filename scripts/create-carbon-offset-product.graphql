@@ -1,0 +1,14 @@
+# One-time setup for the carbon-neutral delivery add-on (run with `shopify store execute --allow-mutations`).
+# 1) productCreate → note the product and variant ids, 2) this file prices and publishes it.
+mutation SetupCarbonOffset {
+  productVariantsBulkUpdate(
+    productId: "gid://shopify/Product/10493236117786"
+    variants: [{id: "gid://shopify/ProductVariant/53273347293466", price: "1.50", taxable: false, inventoryItem: {requiresShipping: false, tracked: false}}]
+  ) {
+    productVariants { id price }
+    userErrors { field message }
+  }
+  publishablePublish(id: "gid://shopify/Product/10493236117786", input: [{publicationId: "gid://shopify/Publication/322667872538"}]) {
+    userErrors { message }
+  }
+}
