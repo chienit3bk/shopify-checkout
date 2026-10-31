@@ -2,8 +2,11 @@
   "version": 1,
   "excludedProductIds": ["gid://shopify/Product/10493236117786"],
   "rules": [
-    {"type": "max_quantity", "productIds": ["gid://shopify/Product/10490410598682"], "max": 3, "label": "BFCM limit"},
-    {"type": "min_subtotal", "amount": 25, "amounts": {"EUR": 25}, "currencyCode": "USD"},
-    {"type": "incompatible", "productIds": ["gid://shopify/Product/10490410533146", "gid://shopify/Product/10490410565914"], "label": "One mask per order"}
+    {"buyer": "retail", "type": "max_quantity", "productIds": ["gid://shopify/Product/10490410598682"], "max": 3, "label": "BFCM limit"},
+    {"buyer": "retail", "type": "min_subtotal", "amount": 25, "amounts": {"EUR": 25}, "currencyCode": "USD"},
+    {"type": "incompatible", "productIds": ["gid://shopify/Product/10490410533146", "gid://shopify/Product/10490410565914"], "label": "One mask per order"},
+    {"buyer": "b2b", "type": "min_quantity", "min": 3},
+    {"buyer": "b2b", "type": "case_pack", "productIds": ["gid://shopify/Product/10490410860826"], "size": 6},
+    {"buyer": "b2b", "type": "min_subtotal", "amount": 300, "firstOrderAmount": 500, "amounts": {"EUR": 300}, "firstOrderAmounts": {"EUR": 500}, "currencyCode": "USD"}
   ]
 }

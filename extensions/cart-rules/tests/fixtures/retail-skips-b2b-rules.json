@@ -1,0 +1,95 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "buyerIdentity": {
+          "purchasingCompany": null,
+          "customer": {
+            "numberOfOrders": 0
+          },
+          "isAuthenticated": false
+        },
+        "cost": {
+          "subtotalAmount": {
+            "amount": "25.0",
+            "currencyCode": "EUR"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 1,
+            "cost": {
+              "totalAmount": {
+                "amount": "25.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/patches",
+                "title": "Hydrogel Eye Patches"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "buyer": "b2b",
+                "type": "min_quantity",
+                "min": 3
+              },
+              {
+                "buyer": "b2b",
+                "type": "case_pack",
+                "productIds": [
+                  "gid://shopify/Product/patches"
+                ],
+                "size": 6
+              },
+              {
+                "buyer": "b2b",
+                "type": "min_subtotal",
+                "amount": 300,
+                "firstOrderAmount": 500,
+                "currencyCode": "EUR"
+              },
+              {
+                "buyer": "retail",
+                "type": "max_quantity",
+                "productIds": [
+                  "gid://shopify/Product/serum"
+                ],
+                "max": 3,
+                "label": "Retail limit"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": []
+          }
+        }
+      ]
+    }
+  }
+}

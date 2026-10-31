@@ -1,0 +1,115 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "buyerIdentity": {
+          "purchasingCompany": {
+            "location": {
+              "ordersCount": 4
+            }
+          },
+          "customer": {
+            "numberOfOrders": 4
+          },
+          "isAuthenticated": true
+        },
+        "cost": {
+          "subtotalAmount": {
+            "amount": "780.0",
+            "currencyCode": "EUR"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 12,
+            "cost": {
+              "totalAmount": {
+                "amount": "300.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/patches",
+                "title": "Hydrogel Eye Patches"
+              }
+            }
+          },
+          {
+            "quantity": 10,
+            "cost": {
+              "totalAmount": {
+                "amount": "480.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/serum",
+                "title": "Vitamin C Brightening Serum"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "buyer": "b2b",
+                "type": "min_quantity",
+                "min": 3
+              },
+              {
+                "buyer": "b2b",
+                "type": "case_pack",
+                "productIds": [
+                  "gid://shopify/Product/patches"
+                ],
+                "size": 6
+              },
+              {
+                "buyer": "b2b",
+                "type": "min_subtotal",
+                "amount": 300,
+                "firstOrderAmount": 500,
+                "currencyCode": "EUR"
+              },
+              {
+                "buyer": "retail",
+                "type": "max_quantity",
+                "productIds": [
+                  "gid://shopify/Product/serum"
+                ],
+                "max": 3,
+                "label": "Retail limit"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": []
+          }
+        }
+      ]
+    }
+  }
+}

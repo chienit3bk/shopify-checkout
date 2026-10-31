@@ -8,8 +8,10 @@
       },
       "presentmentCurrencyRate": "1.0",
       "cart": {
+        "buyerIdentity": null,
         "cost": {
           "subtotalAmount": {
+            "amount": "19.0",
             "currencyCode": "USD"
           }
         },
@@ -17,7 +19,7 @@
           {
             "quantity": 1,
             "cost": {
-              "subtotalAmount": {
+              "totalAmount": {
                 "amount": "19.0"
               }
             },
