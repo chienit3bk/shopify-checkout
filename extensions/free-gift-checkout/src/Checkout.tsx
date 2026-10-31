@@ -8,7 +8,10 @@ import {
   type GiftConfig,
   type GiftRule,
   GIFT_ATTRIBUTE_KEY,
+  chooseGift,
   eligibleRules,
+  giftVariants,
+  isPickerRule,
   nextUnlock,
   parseConfig,
   planGiftChanges,
@@ -39,6 +42,8 @@ function Extension() {
   /** Bumped after each sync so changes made by the buyer mid-sync get re-planned. */
   const [syncRound, setSyncRound] = useState(0);
   const syncing = useRef(false);
+  /** Picker rule whose choice is being applied (button spinner). */
+  const [choosing, setChoosing] = useState<string | null>(null);
   /** Rules whose gift line has been seen in the cart (so a later absence means it was removed). */
   const seenInCart = useRef(new Set<string>());
   const addAttempts = useRef(new Map<string, number>());
@@ -67,11 +72,13 @@ function Extension() {
     giftIdsInCart.forEach((id) => seenInCart.current.add(id));
 
     // A gift that was in the cart is gone while the cart still qualifies → the buyer removed it.
+    // Picker gifts are never auto-added, so their removal needs no memory (the picker stays open).
+    const pickerIds = new Set(config.rules.filter(isPickerRule).map((rule) => rule.id));
     const newlyDeclined: string[] = [];
     for (const id of [...seenInCart.current]) {
       if (giftIdsInCart.has(id)) continue;
       seenInCart.current.delete(id);
-      if (eligibleIds.has(id)) newlyDeclined.push(id);
+      if (eligibleIds.has(id) && !pickerIds.has(id)) newlyDeclined.push(id);
     }
     if (newlyDeclined.length) {
       const next = new Set([...declined, ...newlyDeclined]);
@@ -120,6 +127,22 @@ function Extension() {
     }
   }
 
+  /** The buyer picked a gift: swap the rule's gift line, one change at a time. */
+  function choose(ruleId: string, variantId: string) {
+    if (!config || syncing.current) return;
+    const changes = chooseGift(config, cart, ruleId, variantId);
+    if (changes.length === 0) return;
+    syncing.current = true;
+    setChoosing(ruleId);
+    applySequentially(changes)
+      .catch((error) => console.error('[free-gift] choice failed', error))
+      .finally(() => {
+        syncing.current = false;
+        setChoosing(null);
+        setSyncRound((round) => round + 1);
+      });
+  }
+
   function addBack(ruleId: string) {
     addAttempts.current.delete(ruleId);
     const next = new Set([...declined].filter((id) => id !== ruleId));
@@ -132,7 +155,10 @@ function Extension() {
   if (!config || !active) return null;
 
   const eligible = eligibleRules(config, cart);
-  const inCart = eligible.filter((rule) => cart.lines.some((line) => line.giftRuleId === rule.id));
+  const pickers = eligible.filter(isPickerRule);
+  const inCart = eligible.filter(
+    (rule) => !isPickerRule(rule) && cart.lines.some((line) => line.giftRuleId === rule.id),
+  );
   const removedByBuyer = eligible.filter((rule) => declined.has(rule.id));
   const progress = nextUnlock(config, cart);
   const nextRule = progress ? config.rules.find((rule) => rule.id === progress.ruleId) : undefined;
@@ -153,6 +179,36 @@ function Extension() {
           </s-stack>
         </s-banner>
       )}
+      {pickers.map((rule) => {
+        const chosen = cart.lines.find((line) => line.giftRuleId === rule.id)?.variantId ?? null;
+        return (
+          <s-box key={rule.id} padding="base" border="base" borderRadius="base">
+            <s-stack gap="base">
+              <s-stack gap="small-300">
+                <s-text type="strong">{chosen ? t('pickedHeading') : t('pickHeading')}</s-text>
+                <s-text color="subdued">{rule.title}</s-text>
+              </s-stack>
+              {giftVariants(rule).map((variantId) => (
+                <s-grid key={variantId} gridTemplateColumns="1fr auto" gap="base" alignItems="center">
+                  <GiftCard rule={rule} gift={gifts[variantId]} compact />
+                  {chosen === variantId ? (
+                    <s-badge icon="check-circle">{t('picked')}</s-badge>
+                  ) : (
+                    <s-button
+                      variant="secondary"
+                      loading={choosing === rule.id}
+                      disabled={choosing !== null}
+                      onClick={() => choose(rule.id, variantId)}
+                    >
+                      {chosen ? t('switchTo') : t('pick')}
+                    </s-button>
+                  )}
+                </s-grid>
+              ))}
+            </s-stack>
+          </s-box>
+        );
+      })}
       {removedByBuyer.map((rule) => (
         <s-banner key={rule.id} tone="info">
           <s-stack direction="inline" gap="base" alignItems="center">
@@ -240,16 +296,17 @@ interface GiftProduct {
   url: string | null;
 }
 
-/** The gift as a product: image, name, crossed-out price, FREE, and a link to its page. */
-function GiftCard({rule, gift}: {rule: GiftRule; gift?: GiftProduct}) {
+/** The gift as a product: image, name, crossed-out price, FREE, and a link to its page (not in compact rows). */
+function GiftCard({rule, gift, compact = false}: {rule: GiftRule; gift?: GiftProduct; compact?: boolean}) {
   const t = shopify.i18n.translate;
   const showVariant = gift && gift.variantTitle && gift.variantTitle !== 'Default Title';
 
+  // A grid, not an inline stack: a long product name must wrap beside the image, not push it onto its own row.
   return (
-    <s-stack direction="inline" gap="base" alignItems="center">
+    <s-grid gridTemplateColumns="auto 1fr" gap="base" alignItems="center">
       <s-product-thumbnail src={gift?.imageUrl ?? undefined} alt={gift?.imageAlt ?? rule.title} size="base" />
       <s-stack gap="small-300">
-        {gift && (
+        {gift && !compact && (
           <s-text type="small" color="subdued">
             {rule.title}
           </s-text>
@@ -262,13 +319,13 @@ function GiftCard({rule, gift}: {rule: GiftRule; gift?: GiftProduct}) {
           )}
           <s-badge>{t('free')}</s-badge>
         </s-stack>
-        {gift?.url && (
+        {gift?.url && !compact && (
           <s-link href={gift.url} target="_blank">
             {t('viewProduct')}
           </s-link>
         )}
       </s-stack>
-    </s-stack>
+    </s-grid>
   );
 }
 
@@ -302,7 +359,7 @@ interface GiftProductsData {
 /** Product details for every gift in the config, keyed by variant id (Storefront API, once per config). */
 function useGiftProducts(config: GiftConfig | null): Record<string, GiftProduct> {
   const [products, setProducts] = useState<Record<string, GiftProduct>>({});
-  const ids = config ? [...new Set(config.rules.map((rule) => rule.giftVariantId))].sort() : [];
+  const ids = config ? [...new Set(config.rules.flatMap(giftVariants))].sort() : [];
   const key = ids.join(',');
 
   useEffect(() => {

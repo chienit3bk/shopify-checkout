@@ -3,8 +3,10 @@ import {
   type CartLike,
   type CartLineLike,
   type GiftConfig,
+  chooseGift,
   eligibleRules,
   freeGiftAllocations,
+  invalidGiftLines,
   matches,
   nextUnlock,
   parseConfig,
@@ -308,5 +310,86 @@ describe('multi-currency thresholds', () => {
   test('parseConfig rejects non-numeric market amounts', () => {
     const bad = {...eurConfig, rules: [{...eurConfig.rules[0], condition: {type: 'subtotal_at_least', amount: 75, amounts: {EUR: '70'}}}]};
     expect(parseConfig(bad)?.rules).toHaveLength(0);
+  });
+});
+
+const LIP_VARIANT = 'gid://shopify/ProductVariant/911';
+const SPONGE_VARIANT = 'gid://shopify/ProductVariant/912';
+const PATCH_VARIANT = 'gid://shopify/ProductVariant/913';
+const pickerConfig: GiftConfig = {
+  version: 1,
+  currencyCode: 'USD',
+  rules: [
+    {id: 'tier-50', title: 'Free mug', giftVariantId: MUG_VARIANT, condition: {type: 'subtotal_at_least', amount: 50}},
+    {
+      id: 'pick-120',
+      title: 'Pick a free mini',
+      giftVariantId: LIP_VARIANT,
+      giftOptions: [LIP_VARIANT, SPONGE_VARIANT, PATCH_VARIANT],
+      condition: {type: 'subtotal_at_least', amount: 120},
+    },
+  ],
+};
+
+describe('gift picker', () => {
+  test('a picker gift is never added automatically — the buyer chooses', () => {
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130)]};
+    expect(planGiftChanges(pickerConfig, cart)).toEqual([{type: 'add', ruleId: 'tier-50', variantId: MUG_VARIANT, quantity: 1}]);
+  });
+
+  test('any offered option is kept and made free; an option from another rule is not', () => {
+    const chosen = gift('pick-120', SPONGE_VARIANT);
+    const smuggled = gift('pick-120', MUG_VARIANT);
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130), gift('tier-50', MUG_VARIANT), chosen]};
+    expect(planGiftChanges(pickerConfig, cart)).toEqual([]);
+    expect(freeGiftAllocations(pickerConfig, cart).map((a) => a.lineId)).toContain(chosen.id);
+    const bad: CartLike = {lines: [line(SHIRT, 1, 130), gift('tier-50', MUG_VARIANT), smuggled]};
+    expect(freeGiftAllocations(pickerConfig, bad).map((a) => a.lineId)).not.toContain(smuggled.id);
+  });
+
+  test('chooseGift swaps the current choice for the new one', () => {
+    const current = gift('pick-120', LIP_VARIANT);
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130), current]};
+    expect(chooseGift(pickerConfig, cart, 'pick-120', PATCH_VARIANT)).toEqual([
+      {type: 'remove', lineId: current.id, quantity: 1},
+      {type: 'add', ruleId: 'pick-120', variantId: PATCH_VARIANT, quantity: 1},
+    ]);
+    expect(chooseGift(pickerConfig, cart, 'pick-120', LIP_VARIANT)).toEqual([]);
+  });
+
+  test('chooseGift refuses an option that is not offered or a rule not unlocked', () => {
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130)]};
+    expect(chooseGift(pickerConfig, cart, 'pick-120', MUG_VARIANT)).toEqual([]);
+    expect(chooseGift(pickerConfig, {lines: [line(SHIRT, 1, 90)]}, 'pick-120', LIP_VARIANT)).toEqual([]);
+  });
+
+  test('parseConfig drops a rule whose options are not all ids', () => {
+    const raw = {...pickerConfig, rules: [{...pickerConfig.rules[1], giftOptions: [LIP_VARIANT, 7]}]};
+    expect(parseConfig(raw)?.rules).toEqual([]);
+  });
+});
+
+describe('invalidGiftLines (what the Validation Function blocks)', () => {
+  test('valid gifts pass', () => {
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130), gift('tier-50', MUG_VARIANT), gift('pick-120', SPONGE_VARIANT)]};
+    expect(invalidGiftLines(pickerConfig, cart)).toEqual([]);
+  });
+
+  test('cart dropped below the threshold → not_eligible', () => {
+    const picked = gift('pick-120', SPONGE_VARIANT);
+    const cart: CartLike = {lines: [line(SHIRT, 1, 60), gift('tier-50', MUG_VARIANT), picked]};
+    expect(invalidGiftLines(pickerConfig, cart)).toEqual([{lineId: picked.id, ruleId: 'pick-120', reason: 'not_eligible'}]);
+  });
+
+  test('a variant the rule does not give → not_offered; extra units → too_many; unknown rule → not_eligible', () => {
+    const wrong = gift('pick-120', MUG_VARIANT);
+    const extra = gift('tier-50', MUG_VARIANT, 3);
+    const unknown = gift('vip-only', CAP_VARIANT);
+    const cart: CartLike = {lines: [line(SHIRT, 1, 130), extra, wrong, unknown]};
+    expect(invalidGiftLines(pickerConfig, cart)).toEqual([
+      {lineId: extra.id, ruleId: 'tier-50', reason: 'too_many'},
+      {lineId: wrong.id, ruleId: 'pick-120', reason: 'not_offered'},
+      {lineId: unknown.id, ruleId: 'vip-only', reason: 'not_eligible'},
+    ]);
   });
 });

@@ -1,0 +1,4 @@
+{
+  "name": "Gift validation",
+  "description": "Blocks checkout when a gift line wouldn't be free under the free-gift rules"
+}

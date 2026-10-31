@@ -1,0 +1,121 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "60.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/101",
+              "product": {
+                "id": "gid://shopify/Product/1",
+                "title": "Night Cream"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/2",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "12.0"
+              }
+            },
+            "giftRule": {
+              "value": "tier-50"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/901",
+              "product": {
+                "id": "gid://shopify/Product/900",
+                "title": "Mug"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/3",
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "19.0"
+              }
+            },
+            "giftRule": {
+              "value": "pick-120"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/912",
+              "product": {
+                "id": "gid://shopify/Product/912",
+                "title": "Konjac Body Exfoliator"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "currencyCode": "USD",
+            "rules": [
+              {
+                "id": "tier-50",
+                "title": "Free mug",
+                "giftVariantId": "gid://shopify/ProductVariant/901",
+                "condition": {
+                  "type": "subtotal_at_least",
+                  "amount": 50
+                }
+              },
+              {
+                "id": "pick-120",
+                "title": "Pick a free mini",
+                "giftVariantId": "gid://shopify/ProductVariant/911",
+                "giftOptions": [
+                  "gid://shopify/ProductVariant/911",
+                  "gid://shopify/ProductVariant/912",
+                  "gid://shopify/ProductVariant/913"
+                ],
+                "condition": {
+                  "type": "subtotal_at_least",
+                  "amount": 120
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": []
+          }
+        }
+      ]
+    }
+  }
+}
