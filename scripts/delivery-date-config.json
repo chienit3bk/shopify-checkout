@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "transitDays": 2,
+  "windowDays": 30,
+  "attributeKey": "Delivery date",
+  "poBoxBlockedMethods": ["Express"]
+}

@@ -136,10 +136,13 @@ export function parseCutoffConfig(raw: unknown): CutoffConfig | null {
   if (!Number.isInteger(c.cutoffMinute) || c.cutoffMinute < 0 || c.cutoffMinute > 59) return null;
   if (!Array.isArray(c.shipDays) || !c.shipDays.every((d: unknown) => Number.isInteger(d) && (d as number) >= 1 && (d as number) <= 7)) return null;
   if (!Array.isArray(c.holidays) || !c.holidays.every((d: unknown) => typeof d === 'string' && date.test(d))) return null;
-  try {
-    new Intl.DateTimeFormat('en-US', {timeZone: c.timezone});
-  } catch {
-    return null;
+  // Shopify Functions (wasm) have no Intl: there the calendar fields are all that's used.
+  if (typeof Intl !== 'undefined') {
+    try {
+      new Intl.DateTimeFormat('en-US', {timeZone: c.timezone});
+    } catch {
+      return null;
+    }
   }
   const deadline =
     c.deadline && typeof c.deadline.label === 'string' && date.test(c.deadline.lastOrderDate)

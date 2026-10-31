@@ -1,0 +1,74 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "cart": {
+        "deliveryDate": null,
+        "deliveryGroups": [
+          {
+            "deliveryAddress": {
+              "address1": "PO Box 123",
+              "address2": null
+            },
+            "selectedDeliveryOption": {
+              "title": "Express \u2014 UPS 2nd Day Air"
+            }
+          }
+        ]
+      },
+      "shop": {
+        "localTime": {
+          "date": "2026-11-23"
+        },
+        "cutoff": {
+          "jsonValue": {
+            "version": 1,
+            "timezone": "America/New_York",
+            "cutoffHour": 14,
+            "cutoffMinute": 0,
+            "shipDays": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "holidays": [
+              "2026-11-26",
+              "2026-12-25"
+            ]
+          }
+        },
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "transitDays": 2,
+            "windowDays": 30,
+            "attributeKey": "Delivery date",
+            "poBoxBlockedMethods": [
+              "Express"
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "Express (UPS) can't deliver to a PO Box. Choose Standard or use a street address.",
+                "target": "$.cart.deliveryGroups[0].deliveryAddress.address1"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

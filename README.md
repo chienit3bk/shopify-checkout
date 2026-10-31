@@ -369,6 +369,28 @@ hidden (fix: the bar only promises a method that's actually offered).
 Setup: `scripts/set-demo-weights.graphql` (demo catalog weights), `scripts/set-delivery-rules.graphql`,
 `scripts/activate-delivery-customization.graphql` (scope `write_delivery_customizations`).
 
+## 12. Delivery date picker + PO Box check
+
+![Delivery date demo](docs/demos/delivery-date-po-box.gif)
+
+**Pick a delivery date on the warehouse calendar.** The `delivery-date` block (below the
+shipping options) uses the same calendar as the cut-off banner: earliest = ship date (cut-off
+aware) + 2 delivery days, no weekends, no holidays, at most 30 days ahead
+(`s-date-picker` `disallow` / `disallowDays`). The choice is a **cart attribute**, so it shows on
+the order with no extra setup.
+
+**`delivery-validation` Function** (`cart.validations.generate.run`):
+- PO Box + Express (UPS can't deliver there) → an error **on the address field** while the buyer
+  types (`$.cart.deliveryGroups[0].deliveryAddress.address1`). Standard (USPS) is fine.
+- A stale, weekend or holiday date → blocks placing the order (`CHECKOUT_COMPLETION`).
+
+Gotcha: Shopify Functions run in wasm without `Intl` — the shared cut-off parser used
+`Intl.DateTimeFormat` to check the timezone and rejected every config inside the Function. It now
+skips that check where `Intl` doesn't exist.
+
+Setup: `scripts/set-delivery-date-config.graphql`, `scripts/activate-delivery-validation.graphql`,
+then add **delivery-date** in the checkout editor.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

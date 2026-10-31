@@ -1,0 +1,8 @@
+# Turns on the delivery-validation Function for the store (once per install).
+# shopify app execute --store <shop> --query-file scripts/activate-delivery-validation.graphql
+mutation ActivateDeliveryValidation {
+  validationCreate(validation: {functionHandle: "delivery-validation", title: "Delivery checks", enable: true, blockOnFailure: false}) {
+    validation { id title enabled }
+    userErrors { field message code }
+  }
+}
