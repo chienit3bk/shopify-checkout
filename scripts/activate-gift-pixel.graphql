@@ -1,0 +1,8 @@
+# Activates the gift-funnel web pixel on the store (once per install).
+# Run: shopify app execute --query-file scripts/activate-gift-pixel.graphql
+mutation ActivateGiftPixel {
+  webPixelCreate(webPixel: {settings: "{\"endpoint\":\"none\"}"}) {
+    webPixel { id settings }
+    userErrors { field message code }
+  }
+}

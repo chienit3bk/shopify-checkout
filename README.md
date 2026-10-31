@@ -201,6 +201,29 @@ times are converted to UTC in two passes.
 
 Logic: `shared/shipping/cutoff.ts`.
 
+## 5. Gift funnel analytics — `analytics.publish` + a web pixel
+
+![Gift analytics demo](docs/demos/gift-analytics.gif)
+
+**Which free gift actually moves the order value?** The free-gift block now tells the app's
+web pixel what the buyer saw: a "spend $X more" nudge, a gift unlocked, a gift removed. The
+pixel also hears `checkout_completed` and checks which gift lines were still in the order.
+
+| Event | Sent when |
+|---|---|
+| `free_gift:progress_viewed` | the "spend $X more" card is shown (with the amount left) |
+| `free_gift:unlocked` | a gift line is in the cart |
+| `free_gift:declined` | the buyer removed a gift they qualified for |
+| `checkout_completed` (standard) | the order is placed — gift lines found by their `_free_gift` property |
+
+- **Once per checkout:** sent events are remembered in `shopify.storage`, so reloads and re-renders don't inflate the numbers.
+- **No backend:** the pixel keeps running totals in the storefront's `localStorage` (`free_gift_funnel`): nudges, unlocks, keep rate and orders per gift, AOV with vs without a gift, per currency.
+- **Optional collector:** set the pixel's `endpoint` to an HTTPS URL to also POST every event (GA4 proxy, Segment…); `none` keeps it local.
+- **Privacy:** no personal data — rule ids, amounts and currency only.
+
+Activate on a store: `shopify app execute --query-file scripts/activate-gift-pixel.graphql`.
+Logic: `shared/analytics/gift-funnel.ts` (10 unit tests).
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

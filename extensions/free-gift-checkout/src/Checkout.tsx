@@ -14,6 +14,7 @@ import {
   planGiftChanges,
   supportsCurrency,
 } from '../../../shared/free-gift/rules';
+import {type GiftEventData, type GiftEventName, GIFT_EVENT_PREFIX} from '../../../shared/analytics/gift-funnel';
 
 export default async () => {
   render(<Extension />, document.body);
@@ -24,6 +25,8 @@ const CONFIG_KEY = 'free_gift_config';
 const DECLINED_STORAGE_KEY = 'free-gift:declined';
 /** Stop retrying a gift after this many failed adds (e.g. out of stock). */
 const MAX_ADD_ATTEMPTS = 2;
+/** Analytics events already published in this checkout (one per event + rule, across reloads). */
+const SENT_STORAGE_KEY = 'free-gift:analytics-sent';
 
 function Extension() {
   const config = readConfig();
@@ -124,6 +127,8 @@ function Extension() {
     shopify.storage.write(DECLINED_STORAGE_KEY, [...next]);
   }
 
+  useGiftAnalytics(config && active && canChangeLines ? giftEvents(config, cart, declined, currencyCode) : []);
+
   if (!config || !active) return null;
 
   const eligible = eligibleRules(config, cart);
@@ -175,6 +180,54 @@ function Extension() {
       )}
     </s-stack>
   );
+}
+
+/** What the buyer sees right now, as funnel events for the app's web pixel. */
+function giftEvents(config: GiftConfig, cart: CartLike, declined: Set<string>, currencyCode: string): Array<[GiftEventName, GiftEventData]> {
+  const events: Array<[GiftEventName, GiftEventData]> = [];
+  const progress = nextUnlock(config, cart);
+  if (progress) events.push(['progress_viewed', {ruleId: progress.ruleId, remaining: progress.remaining, currencyCode}]);
+  for (const rule of eligibleRules(config, cart)) {
+    if (cart.lines.some((line) => line.giftRuleId === rule.id)) events.push(['unlocked', {ruleId: rule.id}]);
+    if (declined.has(rule.id)) events.push(['declined', {ruleId: rule.id}]);
+  }
+  return events;
+}
+
+/**
+ * Publishes each event once per checkout (`shopify.storage` survives reloads), so the
+ * pixel counts buyers, not re-renders. `analytics.publish` reaches every web pixel on the page.
+ */
+function useGiftAnalytics(events: Array<[GiftEventName, GiftEventData]>) {
+  const sent = useRef<Set<string> | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const key = events.map(([name, data]) => `${name}:${data.ruleId}`).join('|');
+
+  useEffect(() => {
+    shopify.storage
+      .read(SENT_STORAGE_KEY)
+      .then((stored) => {
+        sent.current = new Set(Array.isArray(stored) ? stored.filter((k): k is string => typeof k === 'string') : []);
+      })
+      .catch(() => {
+        sent.current = new Set();
+      })
+      .finally(() => setLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    const done = sent.current;
+    if (!loaded || !done) return;
+    const fresh = events.filter(([name, data]) => !done.has(`${name}:${data.ruleId}`));
+    if (fresh.length === 0) return;
+    for (const [name, data] of fresh) {
+      done.add(`${name}:${data.ruleId}`);
+      shopify.analytics
+        .publish(`${GIFT_EVENT_PREFIX}${name}`, {...data})
+        .catch((error) => console.error('[free-gift] analytics publish failed', error));
+    }
+    shopify.storage.write(SENT_STORAGE_KEY, [...done]);
+  }, [loaded, key]);
 }
 
 interface GiftProduct {
