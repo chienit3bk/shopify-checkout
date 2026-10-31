@@ -1,0 +1,76 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_COMPLETION"
+      },
+      "cart": {
+        "deliveryDate": {
+          "value": "2026-11-26"
+        },
+        "deliveryGroups": [
+          {
+            "deliveryAddress": {
+              "address1": "350 5th Ave",
+              "address2": null
+            },
+            "selectedDeliveryOption": {
+              "title": "Standard"
+            }
+          }
+        ]
+      },
+      "shop": {
+        "localTime": {
+          "date": "2026-11-23"
+        },
+        "cutoff": {
+          "jsonValue": {
+            "version": 1,
+            "timezone": "America/New_York",
+            "cutoffHour": 14,
+            "cutoffMinute": 0,
+            "shipDays": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "holidays": [
+              "2026-11-26",
+              "2026-12-25"
+            ]
+          }
+        },
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "transitDays": 2,
+            "windowDays": 30,
+            "attributeKey": "Delivery date",
+            "poBoxBlockedMethods": [
+              "Express"
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "We don't deliver on that day. Please pick another date.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

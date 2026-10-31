@@ -1,0 +1,24 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "delivery-date"
+handle = "delivery-date"
+type = "ui_extension"
+uid = "f85d3409-af7b-4f59-ba28-d0707c49d108ce7f9e86"
+
+# Warehouse calendar (ship days, holidays, cut-off) — shared with the cut-off banner.
+[[extensions.metafields]]
+namespace = "$app"
+key = "shipping_cutoff_config"
+owner_type = "SHOP"
+
+# Transit days, window, attribute key — also read by delivery-validation.
+[[extensions.metafields]]
+namespace = "$app"
+key = "delivery_date_config"
+owner_type = "SHOP"
+
+# Below the shipping options: pick a delivery date (saved as a cart attribute, shown on the order).
+[[extensions.targeting]]
+module = "./src/DeliveryDate.tsx"
+target = "purchase.checkout.shipping-option-list.render-after"

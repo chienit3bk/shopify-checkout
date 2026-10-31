@@ -1,0 +1,6 @@
+{
+  "heading": "Choose a delivery date",
+  "hint": "Earliest: {{date}}. Leave it empty for the earliest delivery.",
+  "chosen": "Delivering on {{date}}",
+  "clear": "Use the earliest date"
+}

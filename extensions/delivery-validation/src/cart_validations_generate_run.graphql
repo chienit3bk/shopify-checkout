@@ -1,0 +1,31 @@
+query CartValidationsGenerateRunInput {
+  buyerJourney {
+    step
+  }
+  cart {
+    # Same key as scripts/delivery-date-config.json (attributeKey); set by the delivery-date block.
+    deliveryDate: attribute(key: "Delivery date") {
+      value
+    }
+    deliveryGroups {
+      deliveryAddress {
+        address1
+        address2
+      }
+      selectedDeliveryOption {
+        title
+      }
+    }
+  }
+  shop {
+    localTime {
+      date
+    }
+    cutoff: metafield(key: "shipping_cutoff_config") {
+      jsonValue
+    }
+    config: metafield(key: "delivery_date_config") {
+      jsonValue
+    }
+  }
+}

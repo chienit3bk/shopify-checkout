@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "t:name"
+handle = "delivery-validation"
+type = "function"
+uid = "faa2881e-eea6-409b-9d7e-a6b7cd5a5524c8104e6d"
+description = "t:description"
+
+  # PO Box vs Express while the buyer types; the chosen delivery date when the order is placed.
+  [[extensions.targeting]]
+  target = "cart.validations.generate.run"
+  input_query = "src/cart_validations_generate_run.graphql"
+  export = "cart-validations-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

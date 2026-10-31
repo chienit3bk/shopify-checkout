@@ -1,0 +1,8 @@
+# Writes scripts/delivery-date-config.json to the app-owned shop metafield (delivery-date block + delivery-validation).
+# shopify app execute --store <shop> --query-file scripts/set-delivery-date-config.graphql --variable-file <vars.json>
+mutation SetDeliveryDateConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "delivery_date_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}
