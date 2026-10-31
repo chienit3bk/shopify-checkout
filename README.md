@@ -313,6 +313,37 @@ free-shipping and spend bars all use it, so the message matches the price.
 Setup: `scripts/set-tiers-config.graphql`, `scripts/create-tiered-discount.graphql`
 (`discountClasses: [PRODUCT, ORDER]`), then add **volume-tiers** and **spend-tiers** in the checkout editor.
 
+## 10. Gift for a collection + out-of-stock fallback
+
+![Collection gift demo](docs/demos/gift-collection-fallback.gif)
+
+**"Free mini with any Tools & Body item"** — lip oil, or eye patches once it sells out. New condition `gift_collection_in_cart`. The
+discount Function can't hard-code collection ids (they differ per store), so it uses **input
+query variables**:
+
+```graphql
+query CartInput($giftCollectionIds: [ID!]) { … product { inGiftCollection: inAnyCollection(ids: $giftCollectionIds) } }
+```
+
+```toml
+input_variables = { namespace = "$app:free-gift", key = "input-variables" }
+```
+
+The values live in a metafield **on the Function owner** — the discount node *and* the
+validation (`scripts/set-gift-collections.graphql`), mirrored from the config's
+`giftCollectionIds`. The checkout block gets the same answer from the Storefront API
+(`product.collections`).
+
+**Out-of-stock fallback.** A rule can list `fallbackVariantIds`. The block reads
+`availableForSale` for every gift, so a sold-out gift is replaced by the first available
+fallback before anything is added; a failed add marks that variant too. The Function makes any
+of the rule's variants free. Two gotchas found live:
+- When a gift sells out *while it's in the cart*, Shopify removes the line itself — that's not
+  the buyer declining it, so the block falls back instead of showing "You removed…".
+- App metafields arrive after the first render. "Availability loaded" must be tied to the gift
+  list it was loaded for, or the block adds the sold-out gift before the answer arrives and the
+  buyer gets Shopify's "Out of stock" dialog.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

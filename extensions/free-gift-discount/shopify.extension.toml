@@ -11,6 +11,7 @@ description = "t:description"
   [[extensions.targeting]]
   target = "cart.lines.discounts.generate.run"
   input_query = "src/cart_lines_discounts_generate_run.graphql"
+  input_variables = { namespace = "$app:free-gift", key = "input-variables" }
   export = "cart-lines-discounts-generate-run"
 
   [extensions.build]

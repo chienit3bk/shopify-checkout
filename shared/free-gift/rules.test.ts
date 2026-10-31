@@ -393,3 +393,49 @@ describe('invalidGiftLines (what the Validation Function blocks)', () => {
     ]);
   });
 });
+
+const LIP = 'gid://shopify/ProductVariant/921';
+const PATCH = 'gid://shopify/ProductVariant/922';
+const collectionConfig: GiftConfig = {
+  version: 1,
+  currencyCode: 'USD',
+  giftCollectionIds: ['gid://shopify/Collection/tools'],
+  rules: [
+    {
+      id: 'tools-gift',
+      title: 'Free lip oil with any tool',
+      giftVariantId: LIP,
+      fallbackVariantIds: [PATCH],
+      condition: {type: 'gift_collection_in_cart'},
+    },
+  ],
+};
+
+describe('gift collection + out-of-stock fallback', () => {
+  const tool = () => line(SHIRT, 1, 36, {inGiftCollection: true});
+
+  test('a product from the gift collections unlocks the rule; others do not', () => {
+    expect(eligibleRules(collectionConfig, {lines: [tool()]}).map((r) => r.id)).toEqual(['tools-gift']);
+    expect(eligibleRules(collectionConfig, {lines: [line(SHOES, 1, 36)]})).toEqual([]);
+  });
+
+  test('adds the gift, or its first available fallback when the gift is out of stock', () => {
+    const cart: CartLike = {lines: [tool()]};
+    expect(planGiftChanges(collectionConfig, cart)).toEqual([{type: 'add', ruleId: 'tools-gift', variantId: LIP, quantity: 1}]);
+    expect(planGiftChanges(collectionConfig, cart, new Set(), new Set([LIP]))).toEqual([
+      {type: 'add', ruleId: 'tools-gift', variantId: PATCH, quantity: 1},
+    ]);
+    expect(planGiftChanges(collectionConfig, cart, new Set(), new Set([LIP, PATCH]))).toEqual([]);
+  });
+
+  test('a fallback line is kept and made free (no churn when the gift is back in stock)', () => {
+    const fallback = gift('tools-gift', PATCH);
+    const cart: CartLike = {lines: [tool(), fallback]};
+    expect(planGiftChanges(collectionConfig, cart)).toEqual([]);
+    expect(freeGiftAllocations(collectionConfig, cart).map((a) => a.lineId)).toEqual([fallback.id]);
+  });
+
+  test('parseConfig keeps giftCollectionIds and fallbacks', () => {
+    expect(parseConfig(JSON.stringify(collectionConfig))).toEqual(collectionConfig);
+  });
+});

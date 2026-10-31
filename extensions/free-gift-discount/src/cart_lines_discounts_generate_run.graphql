@@ -1,4 +1,4 @@
-query CartInput {
+query CartInput($giftCollectionIds: [ID!]) {
   # Cart amounts are in the buyer's currency; rule amounts are in the shop's (plus optional per-market overrides).
   presentmentCurrencyRate
   cart {
@@ -24,6 +24,8 @@ query CartInput {
           id
           product {
             id
+            # $giftCollectionIds comes from the discount's input-variables metafield (gift_collection_in_cart).
+            inGiftCollection: inAnyCollection(ids: $giftCollectionIds)
           }
         }
       }

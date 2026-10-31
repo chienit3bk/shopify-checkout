@@ -1,4 +1,4 @@
-query CartValidationsGenerateRunInput {
+query CartValidationsGenerateRunInput($giftCollectionIds: [ID!]) {
   # Only CHECKOUT_COMPLETION is enforced (see the run function).
   buyerJourney {
     step
@@ -28,6 +28,8 @@ query CartValidationsGenerateRunInput {
           id
           product {
             id
+            # $giftCollectionIds comes from the validation's input-variables metafield (gift_collection_in_cart).
+            inGiftCollection: inAnyCollection(ids: $giftCollectionIds)
             title
           }
         }
