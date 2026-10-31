@@ -224,6 +224,32 @@ pixel also hears `checkout_completed` and checks which gift lines were still in 
 Activate on a store: `shopify app execute --query-file scripts/activate-gift-pixel.graphql`.
 Logic: `shared/analytics/gift-funnel.ts` (10 unit tests).
 
+## 6. Gift picker + checkout validation
+
+![Gift picker demo](docs/demos/gift-picker.gif)
+
+**"Pick a free mini with orders over $120."** A rule can offer several gifts
+(`giftOptions`); the buyer chooses one in checkout and can switch any time. Picker gifts are
+never added automatically — the buyer's choice *is* the gift line. The discount Function
+makes only an offered option free, so a variant smuggled in with the gift attribute is charged.
+
+**A Validation Function as the safety net.** Express checkouts (Shop Pay from the cart page)
+skip checkout UI extensions, so nothing removes a gift the cart no longer qualifies for. The
+`gift-validation` Function runs the same rules and blocks **placing the order** when a gift line
+wouldn't be free — with a message naming the gift:
+
+| Case | Message |
+|---|---|
+| Cart dropped below the threshold | "Konjac Body Exfoliator is no longer a free gift for this order. Remove it to continue." |
+| Variant the rule doesn't offer | "… isn't one of the gifts you can choose. Remove it to continue." |
+| More units than the rule gives | "Only one … is free. Lower the quantity to continue." |
+
+Enforced only at `CHECKOUT_COMPLETION`, so cart edits and the block's own swap steps are never
+interrupted; `blockOnFailure: false` keeps checkout open if the Function itself fails.
+Activate: `shopify app execute --query-file scripts/activate-gift-validation.graphql`.
+Logic: `chooseGift` and `invalidGiftLines` in `shared/free-gift/rules.ts`; 5 wasm fixtures in
+`extensions/gift-validation/tests/fixtures`.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

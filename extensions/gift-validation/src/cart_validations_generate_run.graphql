@@ -1,0 +1,43 @@
+query CartValidationsGenerateRunInput {
+  # Only CHECKOUT_COMPLETION is enforced (see the run function).
+  buyerJourney {
+    step
+  }
+  # Cart amounts are in the buyer's currency; rule amounts are in the shop's (plus optional per-market overrides).
+  presentmentCurrencyRate
+  cart {
+    cost {
+      subtotalAmount {
+        currencyCode
+      }
+    }
+    lines {
+      id
+      quantity
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+  shop {
+    # Same app-owned config the discount Function and the checkout block read.
+    config: metafield(key: "free_gift_config") {
+      jsonValue
+    }
+  }
+}

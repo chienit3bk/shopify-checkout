@@ -9,5 +9,10 @@
   "viewProduct": "View product",
   "removedGift": "You removed {{gift}}.",
   "addBack": "Add it back",
-  "giftsNotAvailableHere": "Free gifts can't be added with this checkout method."
+  "giftsNotAvailableHere": "Free gifts can't be added with this checkout method.",
+  "pickHeading": "Choose your free gift",
+  "pickedHeading": "Your free gift — switch anytime",
+  "pick": "Choose",
+  "switchTo": "Switch",
+  "picked": "Selected"
 }

@@ -91,6 +91,23 @@
           }
         ]
       }
+    },
+    {
+      "id": "pick-120",
+      "title": "Pick a free mini with orders over $120",
+      "giftVariantId": "gid://shopify/ProductVariant/53265037099290",
+      "giftOptions": [
+        "gid://shopify/ProductVariant/53265037099290",
+        "gid://shopify/ProductVariant/53265037066522",
+        "gid://shopify/ProductVariant/53265037164826"
+      ],
+      "condition": {
+        "type": "subtotal_at_least",
+        "amount": 120,
+        "amounts": {
+          "EUR": 110
+        }
+      }
     }
   ]
 }

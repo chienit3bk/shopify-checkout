@@ -36,6 +36,11 @@ export interface GiftRule {
   /** Shown to the buyer, e.g. "Free tote bag". */
   title: string;
   giftVariantId: string;
+  /**
+   * Gift picker: the buyer chooses one of these variants (2+ entries). Picker gifts are
+   * never added automatically — the buyer's choice is the gift line in the cart.
+   */
+  giftOptions?: string[];
   /** Units given for free. Defaults to 1. */
   giftQuantity?: number;
   condition: Condition;
@@ -87,6 +92,16 @@ export interface Progress {
   remaining: number;
   /** 0..1, for a progress bar. */
   ratio: number;
+}
+
+/** Variants a rule may give: the picker options, or its single gift. */
+export function giftVariants(rule: GiftRule): string[] {
+  return rule.giftOptions && rule.giftOptions.length > 0 ? rule.giftOptions : [rule.giftVariantId];
+}
+
+/** A rule where the buyer picks the gift (so it is never auto-added). */
+export function isPickerRule(rule: GiftRule): boolean {
+  return (rule.giftOptions?.length ?? 0) > 1;
 }
 
 /** Lines the buyer pays for. Gift lines never count towards a threshold. */
@@ -193,8 +208,8 @@ export function planGiftChanges(
     if (line.giftRuleId === null) continue;
     const rule = eligible.get(line.giftRuleId);
 
-    // Unknown rule, no longer eligible, a duplicate line, or the config now points at another variant.
-    if (!rule || kept.has(rule.id) || rule.giftVariantId !== line.variantId) {
+    // Unknown rule, no longer eligible, a duplicate line, or a variant the rule doesn't give.
+    if (!rule || kept.has(rule.id) || !giftVariants(rule).includes(line.variantId)) {
       changes.push({type: 'remove', lineId: line.id, quantity: line.quantity});
       continue;
     }
@@ -206,7 +221,7 @@ export function planGiftChanges(
   }
 
   for (const rule of eligible.values()) {
-    if (kept.has(rule.id) || declinedRuleIds.has(rule.id)) continue;
+    if (kept.has(rule.id) || declinedRuleIds.has(rule.id) || isPickerRule(rule)) continue;
     changes.push({
       type: 'add',
       ruleId: rule.id,
@@ -232,7 +247,7 @@ export function freeGiftAllocations(
   for (const line of cart.lines) {
     if (line.giftRuleId === null) continue;
     const rule = eligible.get(line.giftRuleId);
-    if (!rule || rule.giftVariantId !== line.variantId) continue;
+    if (!rule || !giftVariants(rule).includes(line.variantId)) continue;
 
     const left = (rule.giftQuantity ?? 1) - (used.get(rule.id) ?? 0);
     const quantity = Math.min(left, line.quantity);
@@ -241,6 +256,50 @@ export function freeGiftAllocations(
     allocations.push({lineId: line.id, quantity, rule});
   }
   return allocations;
+}
+
+/**
+ * The buyer picks `variantId` for a picker rule: swap whatever gift line the rule has
+ * for the chosen one. No changes when the rule isn't eligible or the variant isn't offered.
+ */
+export function chooseGift(config: GiftConfig, cart: CartLike, ruleId: string, variantId: string): CartChange[] {
+  const rule = eligibleRules(config, cart).find((candidate) => candidate.id === ruleId);
+  if (!rule || !giftVariants(rule).includes(variantId)) return [];
+  const current = cart.lines.filter((line) => line.giftRuleId === ruleId);
+  if (current.length === 1 && current[0].variantId === variantId) return [];
+  return [
+    ...current.map((line): CartChange => ({type: 'remove', lineId: line.id, quantity: line.quantity})),
+    {type: 'add', ruleId, variantId, quantity: rule.giftQuantity ?? 1},
+  ];
+}
+
+export type InvalidGiftReason = 'not_eligible' | 'not_offered' | 'too_many';
+
+/**
+ * Gift lines that would not be free: the rule doesn't apply (or no longer exists), the
+ * variant isn't one the rule gives, or there are more units than the rule allows.
+ * Same allocation as the discount Function, so "invalid" means "would be charged".
+ */
+export function invalidGiftLines(
+  config: GiftConfig,
+  cart: CartLike,
+): {lineId: string; ruleId: string; reason: InvalidGiftReason}[] {
+  const eligible = new Map(eligibleRules(config, cart).map((rule) => [rule.id, rule]));
+  const allocated = new Map(freeGiftAllocations(config, cart).map((a) => [a.lineId, a.quantity]));
+  const invalid: {lineId: string; ruleId: string; reason: InvalidGiftReason}[] = [];
+
+  for (const line of cart.lines) {
+    if (line.giftRuleId === null) continue;
+    if ((allocated.get(line.id) ?? 0) >= line.quantity) continue;
+    const rule = eligible.get(line.giftRuleId);
+    const reason: InvalidGiftReason = !rule
+      ? 'not_eligible'
+      : !giftVariants(rule).includes(line.variantId)
+        ? 'not_offered'
+        : 'too_many';
+    invalid.push({lineId: line.id, ruleId: line.giftRuleId, reason});
+  }
+  return invalid;
 }
 
 /**
@@ -301,6 +360,8 @@ export function parseConfig(raw: unknown): GiftConfig | null {
       typeof rule.id === 'string' &&
       typeof rule.title === 'string' &&
       typeof rule.giftVariantId === 'string' &&
+      (rule.giftOptions === undefined ||
+        (Array.isArray(rule.giftOptions) && rule.giftOptions.every((id: unknown) => typeof id === 'string'))) &&
       isCondition(rule.condition),
   );
   return {version: 1, currencyCode: data.currencyCode, rules};
