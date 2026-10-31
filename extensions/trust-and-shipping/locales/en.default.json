@@ -1,5 +1,12 @@
 {
   "shipsToday": "Order within {{time}} — ships today",
   "shipsOn": "Order now — ships {{day}}",
-  "deadline": "Order by {{date}} for {{label}} delivery"
+  "deadline": "Order by {{date}} for {{label}} delivery",
+  "freeShippingAway": "Add {{amount}} for {{label}}",
+  "freeShippingUnlocked": "{{label}} unlocked",
+  "freeShippingProgress": "Progress towards free shipping",
+  "freeShippingExcluded": {
+    "one": "{{count}} sale item doesn't count towards free shipping",
+    "other": "{{count}} sale items don't count towards free shipping"
+  }
 }

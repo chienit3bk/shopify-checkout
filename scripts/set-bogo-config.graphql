@@ -1,0 +1,8 @@
+# Writes scripts/bogo-config.json to the app-owned shop metafield (Function + checkout nudge).
+# shopify app execute --store <shop> --query-file scripts/set-bogo-config.graphql --variable-file <vars.json>
+mutation SetBogoConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "bogo_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}

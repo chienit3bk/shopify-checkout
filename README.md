@@ -250,6 +250,44 @@ Activate: `shopify app execute --query-file scripts/activate-gift-validation.gra
 Logic: `chooseGift` and `invalidGiftLines` in `shared/free-gift/rules.ts`; 5 wasm fixtures in
 `extensions/gift-validation/tests/fixtures`.
 
+## 7. Free Express shipping over $120 — sale items don't count
+
+![Free Express shipping demo](docs/demos/free-express-shipping.gif)
+
+A shipping rate condition ("free over $X") only sees the **cart total**. Merchants keep asking
+for the threshold to ignore some items — sale items, "always ships free" products, gift
+lines — and to apply to one method only. A delivery discount Function can do both:
+
+| Cart | Sale items | Counts | Express |
+|---|---|---|---|
+| $142.00 | $42.00 | $100.00 | $15.00 — "Add $20.00 for free express shipping" |
+| $180.00 | $42.00 | $138.00 | **FREE** — "Free Express shipping unlocked" |
+
+- **One config** (`scripts/free-shipping-config.json`): threshold, per-market amounts (`EUR: 110`), methods (`["Express"]`, matched by title), excluded products, label.
+- **Function** `free-shipping-discount` (`cart.delivery-options.discounts.generate.run`): 100% off the matching delivery options once the counted lines reach the threshold.
+- **Checkout bar** (in the shipping block above the methods): same rule from `shared/shipping/free-shipping.ts`, plus "1 sale item doesn't count towards free shipping" so the buyer knows why.
+
+Setup: `scripts/set-free-shipping-config.graphql`, then `scripts/create-free-shipping-discount.graphql`.
+
+## 8. Buy 2, get 1 free — on the same SKU
+
+![Buy 2 get 1 demo](docs/demos/buy-2-get-1.gif)
+
+**A partial-quantity line discount.** With 3 lip oils in one line, the `bogo-discount`
+Function targets `{cartLine: {id, quantity: 1}}` at 100% — one unit is free, the other two
+keep their price. Checkout shows it as "2 × $19.00" + "1 × FREE (Buy 2, get 1 free)" instead
+of a confusing 33% off every unit. 7 in the cart → 2 free.
+
+**The nudge.** Under each eligible line the `bogo-nudge` block shows the offer, and at 2 units
+a one-tap **"Add 1 more — it's free"** (`updateCartLine`).
+
+Gotcha: a partially discounted line reaches UI extensions **split in two** (2 paid + 1 free)
+while the Function sees one line of 3. The nudge counts the SKU across lines and renders only
+on the undiscounted part — otherwise it keeps asking for "1 more" after the free unit is there.
+
+Setup: `scripts/set-bogo-config.graphql` (`scripts/bogo-config.json`), then
+`scripts/create-bogo-discount.graphql`, then add the **bogo-nudge** block in the checkout editor.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

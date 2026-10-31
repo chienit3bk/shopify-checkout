@@ -1,0 +1,29 @@
+query CartInput {
+  cart {
+    lines {
+      id
+      quantity
+      # Gift lines are already free and never count.
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            id
+          }
+        }
+      }
+    }
+  }
+  shop {
+    # App-owned config, also read by the checkout nudge.
+    config: metafield(key: "bogo_config") {
+      jsonValue
+    }
+  }
+  discount {
+    discountClasses
+  }
+}

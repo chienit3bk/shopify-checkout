@@ -12,6 +12,12 @@ namespace = "$app"
 key = "shipping_cutoff_config"
 owner_type = "SHOP"
 
+# Free-shipping threshold, also read by the free-shipping-discount Function.
+[[extensions.metafields]]
+namespace = "$app"
+key = "free_shipping_config"
+owner_type = "SHOP"
+
 # "Order within 2h 41m — ships today" above the shipping options.
 [[extensions.targeting]]
 module = "./src/Cutoff.tsx"

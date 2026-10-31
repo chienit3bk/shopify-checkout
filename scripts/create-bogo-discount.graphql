@@ -1,0 +1,16 @@
+# Automatic product discount backed by the bogo-discount Function (once per store).
+# shopify app execute --store <shop> --query-file scripts/create-bogo-discount.graphql
+mutation CreateBogoDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "Buy 2, get 1 free"
+      functionHandle: "bogo-discount"
+      discountClasses: [PRODUCT]
+      startsAt: "2026-10-31T00:00:00Z"
+      combinesWith: {productDiscounts: true, orderDiscounts: true, shippingDiscounts: true}
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message code }
+  }
+}

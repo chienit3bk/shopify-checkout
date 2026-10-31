@@ -1,0 +1,16 @@
+# Automatic shipping discount backed by the free-shipping-discount Function (once per store).
+# shopify app execute --store <shop> --query-file scripts/create-free-shipping-discount.graphql
+mutation CreateFreeShippingDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "Free Express shipping"
+      functionHandle: "free-shipping-discount"
+      discountClasses: [SHIPPING]
+      startsAt: "2026-10-31T00:00:00Z"
+      combinesWith: {productDiscounts: true, orderDiscounts: true, shippingDiscounts: false}
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message code }
+  }
+}
