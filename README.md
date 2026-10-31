@@ -269,6 +269,25 @@ lines — and to apply to one method only. A delivery discount Function can do b
 
 Setup: `scripts/set-free-shipping-config.graphql`, then `scripts/create-free-shipping-discount.graphql`.
 
+## 8. Buy 2, get 1 free — on the same SKU
+
+![Buy 2 get 1 demo](docs/demos/buy-2-get-1.gif)
+
+**A partial-quantity line discount.** With 3 lip oils in one line, the `bogo-discount`
+Function targets `{cartLine: {id, quantity: 1}}` at 100% — one unit is free, the other two
+keep their price. Checkout shows it as "2 × $19.00" + "1 × FREE (Buy 2, get 1 free)" instead
+of a confusing 33% off every unit. 7 in the cart → 2 free.
+
+**The nudge.** Under each eligible line the `bogo-nudge` block shows the offer, and at 2 units
+a one-tap **"Add 1 more — it's free"** (`updateCartLine`).
+
+Gotcha: a partially discounted line reaches UI extensions **split in two** (2 paid + 1 free)
+while the Function sees one line of 3. The nudge counts the SKU across lines and renders only
+on the undiscounted part — otherwise it keeps asking for "1 more" after the free unit is there.
+
+Setup: `scripts/set-bogo-config.graphql` (`scripts/bogo-config.json`), then
+`scripts/create-bogo-discount.graphql`, then add the **bogo-nudge** block in the checkout editor.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

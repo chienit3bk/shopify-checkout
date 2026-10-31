@@ -1,0 +1,6 @@
+{
+  "addOneFree": {
+    "one": "Add {{count}} more — it's free",
+    "other": "Add {{count}} more — they're free"
+  }
+}

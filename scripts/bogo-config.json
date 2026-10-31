@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "buy": 2,
+  "get": 1,
+  "productIds": [
+    "gid://shopify/Product/10490410991898",
+    "gid://shopify/Product/10490410533146"
+  ],
+  "label": "Buy 2, get 1 free"
+}

@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "t:name"
+handle = "bogo-discount"
+type = "function"
+uid = "e6bc3bd9-eff1-4d11-ba93-d786d35fc66070bd71f2"
+description = "t:description"
+
+  # Buy 2 get 1 on the same SKU: a partial-quantity line discount.
+  [[extensions.targeting]]
+  target = "cart.lines.discounts.generate.run"
+  input_query = "src/cart_lines_discounts_generate_run.graphql"
+  export = "cart-lines-discounts-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

@@ -12,7 +12,7 @@
     "info": "shopify app info",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",
-    "test": "vitest run && npm test --workspace free-gift-discount -- --run && npm test --workspace bfcm-offer-discount -- --run && npm test --workspace gift-validation -- --run && npm test --workspace free-shipping-discount -- --run"
+    "test": "vitest run && npm test --workspace free-gift-discount -- --run && npm test --workspace bfcm-offer-discount -- --run && npm test --workspace gift-validation -- --run && npm test --workspace free-shipping-discount -- --run && npm test --workspace bogo-discount -- --run"
   },
   "dependencies": {
     "@shopify/cli": "4.9.4"
