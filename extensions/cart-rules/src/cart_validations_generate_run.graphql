@@ -1,0 +1,40 @@
+query CartValidationsGenerateRunInput {
+  buyerJourney {
+    step
+  }
+  presentmentCurrencyRate
+  cart {
+    cost {
+      subtotalAmount {
+        currencyCode
+      }
+    }
+    lines {
+      quantity
+      cost {
+        subtotalAmount {
+          amount
+        }
+      }
+      # Gift lines never count (free-gift block).
+      giftRule: attribute(key: "_free_gift") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+  shop {
+    # App-owned rules (scripts/cart-rules-config.json).
+    config: metafield(key: "cart_rules_config") {
+      jsonValue
+    }
+  }
+}

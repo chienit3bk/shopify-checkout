@@ -1,0 +1,103 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_COMPLETION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "32.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/clay",
+                "title": "Purifying Clay Mask"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "28.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/charcoal",
+                "title": "Charcoal Peel-Off Mask"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "type": "max_quantity",
+                "productIds": [
+                  "gid://shopify/Product/serum"
+                ],
+                "max": 3,
+                "label": "BFCM limit"
+              },
+              {
+                "type": "min_subtotal",
+                "amount": 25,
+                "amounts": {
+                  "EUR": 25
+                },
+                "currencyCode": "USD"
+              },
+              {
+                "type": "incompatible",
+                "productIds": [
+                  "gid://shopify/Product/clay",
+                  "gid://shopify/Product/charcoal"
+                ],
+                "label": "One mask per order"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "One mask per order: Purifying Clay Mask and Charcoal Peel-Off Mask can't be ordered together. Remove one to continue.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

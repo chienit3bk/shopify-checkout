@@ -1,0 +1,4 @@
+{
+  "name": "Cart rules",
+  "description": "Max quantity per product, minimum order per market, products that can't be bought together"
+}

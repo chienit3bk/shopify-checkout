@@ -1,0 +1,8 @@
+# Writes scripts/cart-rules-config.json to the app-owned shop metafield (cart-rules Validation Function).
+# shopify app execute --store <shop> --query-file scripts/set-cart-rules-config.graphql --variable-file <vars.json>
+mutation SetCartRulesConfig($shopId: ID!, $config: String!) {
+  metafieldsSet(metafields: [{ownerId: $shopId, namespace: "$app", key: "cart_rules_config", type: "json", value: $config}]) {
+    metafields { key updatedAt }
+    userErrors { field message }
+  }
+}
