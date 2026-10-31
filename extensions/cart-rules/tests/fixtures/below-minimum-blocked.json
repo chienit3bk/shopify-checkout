@@ -1,0 +1,103 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_COMPLETION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "19.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/lip",
+                "title": "Nourishing Lip Oil"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "1.5"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/offset",
+                "title": "Carbon-neutral delivery"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "type": "max_quantity",
+                "productIds": [
+                  "gid://shopify/Product/serum"
+                ],
+                "max": 3,
+                "label": "BFCM limit"
+              },
+              {
+                "type": "min_subtotal",
+                "amount": 25,
+                "amounts": {
+                  "EUR": 25
+                },
+                "currencyCode": "USD"
+              },
+              {
+                "type": "incompatible",
+                "productIds": [
+                  "gid://shopify/Product/clay",
+                  "gid://shopify/Product/charcoal"
+                ],
+                "label": "One mask per order"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "The minimum order is 25.00 USD. Add 6.00 USD more to check out.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

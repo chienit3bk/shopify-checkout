@@ -411,6 +411,27 @@ free-shipping and spend-tier configs already did), and the add-on is excluded fr
 Setup: `scripts/create-carbon-offset-product.graphql` (store execute), `scripts/set-carbon-offset-config.graphql`,
 then add **carbon-offset** in the checkout editor.
 
+### Week 3 — cart rules
+
+## 14. Max quantity, minimum order and incompatible products
+
+![Cart rules demo](docs/demos/cart-rules.gif)
+
+**One validation Function, three rule types, one JSON config** (`shared/cart/rules.ts`):
+- `max_quantity` — "You can buy up to 3 of Vitamin C Brightening Serum per order (you have 4)." Split lines
+  of the same product are added up first.
+- `min_subtotal` — "The minimum order is 25.00 USD. Add 16.00 USD more to check out." Round
+  amounts per market (`amounts: {EUR: 25}`); gift lines and services never count.
+- `incompatible` — "One mask per order: Purifying Clay Mask and Charcoal Peel-Off Mask can't be ordered
+  together. Remove one to continue."
+
+The `cart-rules` Function (`cart.validations.generate.run`) skips `CART_INTERACTION`, so the cart
+page stays editable, and blocks at checkout with a message that says exactly what to change.
+No UI block needed — checkout shows the errors itself.
+
+Setup: `scripts/set-cart-rules-config.graphql` (with `scripts/cart-rules-config.json`),
+`scripts/activate-cart-rules.graphql`.
+
 ---
 
 Built by **Clark (Chien) Nguyen** — Shopify app developer, Checkout Extensibility & Functions.

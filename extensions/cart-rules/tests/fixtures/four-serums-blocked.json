@@ -1,0 +1,87 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "buyerJourney": {
+        "step": "CHECKOUT_INTERACTION"
+      },
+      "presentmentCurrencyRate": "1.0",
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "currencyCode": "USD"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 4,
+            "cost": {
+              "subtotalAmount": {
+                "amount": "192.0"
+              }
+            },
+            "giftRule": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/serum",
+                "title": "Vitamin C Brightening Serum"
+              }
+            }
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "excludedProductIds": [
+              "gid://shopify/Product/offset"
+            ],
+            "rules": [
+              {
+                "type": "max_quantity",
+                "productIds": [
+                  "gid://shopify/Product/serum"
+                ],
+                "max": 3,
+                "label": "BFCM limit"
+              },
+              {
+                "type": "min_subtotal",
+                "amount": 25,
+                "amounts": {
+                  "EUR": 25
+                },
+                "currencyCode": "USD"
+              },
+              {
+                "type": "incompatible",
+                "productIds": [
+                  "gid://shopify/Product/clay",
+                  "gid://shopify/Product/charcoal"
+                ],
+                "label": "One mask per order"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "You can buy up to 3 of Vitamin C Brightening Serum per order (you have 4).",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

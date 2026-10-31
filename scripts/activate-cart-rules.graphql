@@ -1,0 +1,8 @@
+# Turns on the cart-rules Function for the store (once per install).
+# shopify app execute --store <shop> --query-file scripts/activate-cart-rules.graphql
+mutation ActivateCartRules {
+  validationCreate(validation: {functionHandle: "cart-rules", title: "Cart rules", enable: true, blockOnFailure: false}) {
+    validation { id title enabled }
+    userErrors { field message code }
+  }
+}

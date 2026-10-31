@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "excludedProductIds": ["gid://shopify/Product/10493236117786"],
+  "rules": [
+    {"type": "max_quantity", "productIds": ["gid://shopify/Product/10490410598682"], "max": 3, "label": "BFCM limit"},
+    {"type": "min_subtotal", "amount": 25, "amounts": {"EUR": 25}, "currencyCode": "USD"},
+    {"type": "incompatible", "productIds": ["gid://shopify/Product/10490410533146", "gid://shopify/Product/10490410565914"], "label": "One mask per order"}
+  ]
+}
