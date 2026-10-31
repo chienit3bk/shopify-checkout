@@ -1,0 +1,18 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "t:name"
+handle = "delivery-customization"
+type = "function"
+uid = "6dba2856-95ef-410c-a34d-725c362d8abdd3b609fb"
+description = "t:description"
+
+  # Hide Express for heavy carts; rename and reorder options per market.
+  [[extensions.targeting]]
+  target = "cart.delivery-options.transform.run"
+  input_query = "src/cart_delivery_options_transform_run.graphql"
+  export = "cart-delivery-options-transform-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

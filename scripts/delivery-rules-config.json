@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "rules": [
+    {"action": "hide", "methods": ["Express"], "when": {"minWeightKg": 1}},
+    {"action": "rename", "methods": ["Standard"], "title": "Standard — USPS Ground (3–5 days)", "when": {"countries": ["US"]}},
+    {"action": "rename", "methods": ["Express"], "title": "Express — UPS 2nd Day Air", "when": {"countries": ["US"]}},
+    {"action": "move", "methods": ["Express"], "index": 0, "when": {"countries": ["US"], "minSubtotal": 100}}
+  ]
+}

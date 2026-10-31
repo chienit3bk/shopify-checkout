@@ -1,0 +1,8 @@
+# Turns on the delivery-customization Function for the store (once per install).
+# shopify app execute --store <shop> --query-file scripts/activate-delivery-customization.graphql
+mutation ActivateDeliveryCustomization {
+  deliveryCustomizationCreate(deliveryCustomization: {functionHandle: "delivery-customization", title: "Delivery rules", enabled: true}) {
+    deliveryCustomization { id title enabled }
+    userErrors { field message code }
+  }
+}

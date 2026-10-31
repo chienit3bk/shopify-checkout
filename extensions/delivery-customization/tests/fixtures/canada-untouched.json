@@ -1,0 +1,100 @@
+{
+  "payload": {
+    "export": "cart-delivery-options-transform-run",
+    "target": "cart.delivery-options.transform.run",
+    "input": {
+      "cart": {
+        "cost": {
+          "subtotalAmount": {
+            "amount": "104.0"
+          }
+        },
+        "lines": [
+          {
+            "quantity": 2,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "weight": 120.0,
+              "weightUnit": "GRAMS"
+            }
+          }
+        ],
+        "deliveryGroups": [
+          {
+            "deliveryAddress": {
+              "countryCode": "CA"
+            },
+            "deliveryOptions": [
+              {
+                "handle": "std",
+                "title": "Standard"
+              },
+              {
+                "handle": "exp",
+                "title": "Express"
+              }
+            ]
+          }
+        ]
+      },
+      "shop": {
+        "config": {
+          "jsonValue": {
+            "version": 1,
+            "rules": [
+              {
+                "action": "hide",
+                "methods": [
+                  "Express"
+                ],
+                "when": {
+                  "minWeightKg": 1
+                }
+              },
+              {
+                "action": "rename",
+                "methods": [
+                  "Standard"
+                ],
+                "title": "Standard \u2014 USPS Ground (3\u20135 days)",
+                "when": {
+                  "countries": [
+                    "US"
+                  ]
+                }
+              },
+              {
+                "action": "rename",
+                "methods": [
+                  "Express"
+                ],
+                "title": "Express \u2014 UPS 2nd Day Air",
+                "when": {
+                  "countries": [
+                    "US"
+                  ]
+                }
+              },
+              {
+                "action": "move",
+                "methods": [
+                  "Express"
+                ],
+                "index": 0,
+                "when": {
+                  "countries": [
+                    "US"
+                  ],
+                  "minSubtotal": 100
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "output": {
+      "operations": []
+    }
+  }
+}

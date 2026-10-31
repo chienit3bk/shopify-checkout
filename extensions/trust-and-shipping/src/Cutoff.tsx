@@ -3,7 +3,7 @@ import {render} from 'preact';
 import {useEffect, useState} from 'preact/hooks';
 import {cutoffStatus, formatLeft, parseCutoffConfig} from '../../../shared/shipping/cutoff';
 import {amountsBeforeDiscounts} from '../../../shared/cart/subtotal';
-import {freeShippingStatus, parseFreeShippingConfig} from '../../../shared/shipping/free-shipping';
+import {freeShippingStatus, matchesMethod, parseFreeShippingConfig} from '../../../shared/shipping/free-shipping';
 
 export default async () => {
   render(<Cutoff />, document.body);
@@ -36,6 +36,11 @@ function FreeShippingBar() {
   const t = shopify.i18n.translate;
   const config = parseFreeShippingConfig(shopMetafield(FREE_SHIPPING_KEY));
   if (!config) return null;
+
+  // Once the options are known, only promise a method that is actually offered — a delivery
+  // rule may have hidden it (e.g. no Express for heavy carts).
+  const optionTitles = shopify.deliveryGroups.value.flatMap((group) => group.deliveryOptions.map((option) => option.title));
+  if (optionTitles.length > 0 && !optionTitles.some((title) => matchesMethod(config, title))) return null;
 
   const currencyCode = shopify.cost.subtotalAmount.value.currencyCode;
   const lines = shopify.lines.value;

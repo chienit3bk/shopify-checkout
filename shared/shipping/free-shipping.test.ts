@@ -50,6 +50,12 @@ describe('matchesMethod', () => {
     expect(matchesMethod(config, 'Standard')).toBe(false);
     expect(matchesMethod(config, null)).toBe(false);
   });
+
+  test('a renamed option that keeps the method name first still matches; a longer word does not', () => {
+    expect(matchesMethod(config, 'Express — UPS 2nd Day Air')).toBe(true);
+    expect(matchesMethod(config, 'Express (2 days)')).toBe(true);
+    expect(matchesMethod(config, 'Expressway Freight')).toBe(false);
+  });
 });
 
 describe('parseFreeShippingConfig', () => {

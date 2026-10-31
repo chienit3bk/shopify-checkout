@@ -17,7 +17,7 @@ embedded_app_direct_api_access = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_discounts,write_orders,write_pixels,read_customer_events,write_validations"
+scopes = "read_products,write_discounts,write_orders,write_pixels,read_customer_events,write_validations,write_delivery_customizations"
 
 [auth]
 redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
